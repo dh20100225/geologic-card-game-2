@@ -1,0 +1,2451 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>지질시대 추리 카드 대전</title>
+
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
+<style>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, "Pretendard", sans-serif;
+}
+
+body {
+  background: #12131c;
+  color: white;
+  min-height: 100vh;
+  padding: 15px;
+}
+
+button {
+  border: none;
+  border-radius: 7px;
+  padding: 11px 17px;
+  background: #4f46e5;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #3730a3;
+}
+
+button:disabled {
+  background: #333;
+  cursor: not-allowed;
+}
+
+input {
+  background: #0a0a0f;
+  color: white;
+  border: 1px solid #444;
+  border-radius: 7px;
+  padding: 12px;
+  font-size: 16px;
+  width: 100%;
+}
+
+#lobby {
+  width: 100%;
+  max-width: 500px;
+  margin: 50px auto;
+  padding: 25px;
+  background: #1e1f2c;
+  border-radius: 15px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,.5);
+}
+
+#lobby h1 {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+.subtitle {
+  color: #9ca3af;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.id-box {
+  margin-top: 20px;
+  padding: 14px;
+  background: #0a0a0f;
+  border-radius: 8px;
+}
+
+#my-id {
+  color: #10b981;
+  word-break: break-all;
+}
+
+.id-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.id-buttons button {
+  flex: 1;
+}
+
+.connect-area {
+  margin-top: 15px;
+  display: flex;
+  gap: 8px;
+}
+
+.connect-area input {
+  flex: 1;
+}
+
+.status {
+  margin-top: 15px;
+  min-height: 20px;
+  color: #fbbf24;
+  font-size: 13px;
+}
+
+#game-board {
+  display: none;
+  max-width: 950px;
+  margin: auto;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.player-zone {
+  background: #1e1f2c;
+  border-radius: 12px;
+  padding: 15px;
+  border: 2px solid #333;
+}
+
+.status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.status-bar h3 {
+  font-size: 16px;
+}
+
+.hp-bar-bg {
+  width: 100%;
+  height: 18px;
+  background: #333;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 9px;
+}
+
+.hp-bar-fill {
+  width: 100%;
+  height: 100%;
+  background: #ef4444;
+  transition: width .3s;
+}
+
+.card-list {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 10px 2px;
+  min-height: 180px;
+}
+
+.card {
+  width: 110px;
+  height: 165px;
+  flex-shrink: 0;
+  background: #2a2c3d;
+  border: 2px solid #6b7280;
+  border-radius: 9px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+  transition: .2s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.card.selected {
+  border-color: #fbbf24;
+  transform: translateY(-8px);
+  box-shadow: 0 0 12px #fbbf24;
+}
+
+.card.disabled {
+  opacity: .35;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.card.ATTACK {
+  border-color: #ef4444;
+}
+
+.card.DEFENSE {
+  border-color: #3b82f6;
+}
+
+.card.SPECIAL {
+  border-color: #ec4899;
+}
+
+.card-type-tag {
+  display: inline-block;
+  padding: 2px 4px;
+  border-radius: 3px;
+  background: rgba(255,255,255,.15);
+  font-size: 9px;
+  font-weight: bold;
+}
+
+.card-title {
+  font-size: 11px;
+  font-weight: bold;
+  text-align: center;
+  word-break: keep-all;
+}
+
+.card-img {
+  width: 100%;
+  height: 55px;
+  object-fit: cover;
+  border-radius: 4px;
+  background: #111;
+}
+
+.card-desc {
+  color: #bbb;
+  font-size: 9px;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.card-val {
+  color: #ffd700;
+  font-size: 14px;
+  font-weight: bold;
+  text-align: right;
+}
+
+#battle-field {
+  min-height: 210px;
+  background: #0f1017;
+  border: 2px dashed #374151;
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 25px;
+  padding: 15px;
+}
+
+.field-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.field-title {
+  font-size: 11px;
+  font-weight: bold;
+}
+
+#attack-cards-slot,
+#defense-cards-slot {
+  display: flex;
+  gap: 5px;
+  min-height: 30px;
+}
+
+#attack-cards-slot .card,
+#defense-cards-slot .card {
+  cursor: default;
+  transform: none;
+}
+
+#action-bar {
+  background: #1e1f2c;
+  border-radius: 9px;
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+#turn-indicator {
+  color: #fbbf24;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 7px;
+}
+
+#btn-draw {
+  background: #4b5563;
+}
+
+#log {
+  height: 110px;
+  overflow-y: auto;
+  background: #0a0a0f;
+  border-radius: 7px;
+  padding: 10px;
+  font-size: 12px;
+  color: #d1d5db;
+  line-height: 1.5;
+}
+
+.copy-success {
+  color: #10b981 !important;
+}
+
+@media(max-width:650px) {
+  #battle-field {
+    gap: 8px;
+  }
+
+  .status-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  #action-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .action-buttons {
+    width: 100%;
+  }
+
+  .action-buttons button {
+    flex: 1;
+  }
+
+  .connect-area {
+    flex-direction: column;
+  }
+
+  .id-buttons {
+    flex-direction: column;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ==================== 로비 ==================== -->
+
+<div id="lobby">
+
+  <h1>🌋 지질시대 추리 카드 대전</h1>
+
+  <p class="subtitle">
+    화석과 지질시대 카드를 이용해<br>
+    상대의 HP를 먼저 0으로 만들어보세요!
+  </p>
+
+  <div class="id-box">
+    <div>내 접속 ID</div>
+
+    <b id="my-id">ID 생성 중...</b>
+
+    <div class="id-buttons">
+      <button onclick="copyMyId()">📋 ID 복사</button>
+      <button onclick="recreatePeer()">🔄 ID 새로 만들기</button>
+    </div>
+  </div>
+
+  <div class="connect-area">
+    <input
+      type="text"
+      id="peer-id-input"
+      placeholder="상대방 ID 입력"
+    >
+
+    <button onclick="connectToPeer()">
+      연결하기
+    </button>
+  </div>
+
+  <p id="status-msg" class="status">
+    서버에 연결하는 중...
+  </p>
+
+</div>
+
+
+<!-- ==================== 게임 ==================== -->
+
+<div id="game-board">
+
+  <!-- 상대 -->
+  <div class="player-zone">
+
+    <div class="status-bar">
+
+      <h3>
+        상대 플레이어
+        (<span id="opponent-role">-</span>)
+      </h3>
+
+      <div>
+        HP:
+        <span id="opponent-hp">100</span>/100
+      </div>
+
+    </div>
+
+    <div class="hp-bar-bg">
+      <div
+        class="hp-bar-fill"
+        id="opponent-hp-bar">
+      </div>
+    </div>
+
+    <div style="
+      margin-top:6px;
+      font-size:12px;
+      color:#9ca3af;
+    ">
+      남은 카드:
+      <span id="opponent-card-count">6</span>장
+    </div>
+
+  </div>
+
+
+  <!-- 전투 -->
+  <div id="battle-field">
+
+    <div class="field-section">
+
+      <span
+        class="field-title"
+        style="color:#ef4444">
+        ⚔️ 공격 카드
+      </span>
+
+      <div id="attack-cards-slot"></div>
+
+    </div>
+
+    <div style="
+      font-size:20px;
+      font-weight:bold;
+      color:#4b5563;
+    ">
+      VS
+    </div>
+
+    <div class="field-section">
+
+      <span
+        class="field-title"
+        style="color:#3b82f6">
+        🛡️ 방어 카드
+      </span>
+
+      <div id="defense-cards-slot"></div>
+
+    </div>
+
+  </div>
+
+
+  <!-- 내 정보 -->
+  <div class="player-zone">
+
+    <div class="status-bar">
+
+      <h3>
+        나
+        (<span id="my-role">-</span>)
+      </h3>
+
+      <div>
+        HP:
+        <span id="my-hp">100</span>/100
+      </div>
+
+    </div>
+
+    <div class="hp-bar-bg">
+      <div
+        class="hp-bar-fill"
+        id="my-hp-bar">
+      </div>
+    </div>
+
+    <p style="
+      margin-top:10px;
+      font-size:13px;
+      font-weight:bold;
+    ">
+      내 손패
+      (<span id="my-card-count">0</span>/10)
+    </p>
+
+    <div
+      class="card-list"
+      id="my-hand">
+    </div>
+
+  </div>
+
+
+  <!-- 버튼 -->
+  <div id="action-bar">
+
+    <span id="turn-indicator">
+      대기 중...
+    </span>
+
+    <div class="action-buttons">
+
+      <button
+        id="btn-submit"
+        onclick="submitSelectedCards()"
+        disabled>
+        카드 제출
+      </button>
+
+      <button
+        id="btn-draw"
+        onclick="passAndDraw()"
+        disabled>
+        드로우 & Pass
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- 로그 -->
+  <div id="log"></div>
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   카드 데이터
+========================================================= */
+
+const CARD_DATABASE = {
+
+  ATTACK: [
+
+    {
+      name:'스트로마톨라이트',
+      era:'선캄브리아',
+      val:18,
+      desc:'바다 속 최초 생명체 흔적',
+      img:'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Stromatolite_in_Soos_Quarry.jpg/320px-Stromatolite_in_Soos_Quarry.jpg'
+    },
+
+    {
+      name:'에디아카라 동물군',
+      era:'선캄브리아',
+      val:20,
+      desc:'최초의 다세포 생물군',
+      img:'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/DickinsoniaCostata.jpg/320px-DickinsoniaCostata.jpg'
+    },
+
+    {
+      name:'남세균 대증식',
+      era:'선캄브리아',
+      val:22,
+      desc:'산소 농도를 크게 증가시킴',
+      img:'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Cyanobacteria_HP.jpg/320px-Cyanobacteria_HP.jpg'
+    },
+
+    {
+      name:'삼엽충 습격',
+      era:'고생대',
+      val:24,
+      desc:'고생대를 대표하는 해양 생물',
+      img:'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/Trilobite_Koneprusia.jpg/320px-Trilobite_Koneprusia.jpg'
+    },
+
+    {
+      name:'갑주어 돌진',
+      era:'고생대',
+      val:26,
+      desc:'단단한 골격을 가진 어류',
+      img:'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/Dunkleosteus_terrelli_page.jpg/320px-Dunkleosteus_terrelli_page.jpg'
+    },
+
+    {
+      name:'양치식물 무성',
+      era:'고생대',
+      val:25,
+      desc:'거대한 양치식물 숲을 형성',
+      img:'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Alethopteris_serlii.jpg/320px-Alethopteris_serlii.jpg'
+    },
+
+    {
+      name:'공룡 포효',
+      era:'중생대',
+      val:28,
+      desc:'중생대 육상을 대표하는 파충류',
+      img:'https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Tyrannosaurus_rex_skull_02.jpg/320px-Tyrannosaurus_rex_skull_02.jpg'
+    },
+
+    {
+      name:'암모나이트',
+      era:'중생대',
+      val:23,
+      desc:'나선형 껍데기를 가진 해양 생물',
+      img:'https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Ammonite_Asteroceras.jpg/320px-Ammonite_Asteroceras.jpg'
+    },
+
+    {
+      name:'시조새 비상',
+      era:'중생대',
+      val:27,
+      desc:'파충류와 조류의 특징을 가짐',
+      img:'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Archaeopteryx_lithographica_%28Berlin_specimen%29.jpg/320px-Archaeopteryx_lithographica_%28Berlin_specimen%29.jpg'
+    },
+
+    {
+      name:'매머드 돌진',
+      era:'신생대',
+      val:27,
+      desc:'빙하기에 적응한 대형 포유류',
+      img:'https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Mammuthus_primigenius_pennsylvanicus.jpg/320px-Mammuthus_primigenius_pennsylvanicus.jpg'
+    },
+
+    {
+      name:'화패석 분출',
+      era:'신생대',
+      val:22,
+      desc:'동전 모양의 유공충 화석',
+      img:'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Nummulites_incrassatus.jpg/320px-Nummulites_incrassatus.jpg'
+    },
+
+    {
+      name:'인류의 조상',
+      era:'신생대',
+      val:29,
+      desc:'제4기에 출현한 인류의 조상',
+      img:'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2d/Homo_erectus_new.JPG/320px-Homo_erectus_new.JPG'
+    }
+
+  ],
+
+
+  DEFENSE: [
+
+    {
+      name:'최초의 오존층',
+      era:'선캄브리아',
+      val:18,
+      desc:'자외선 차단의 기반',
+      img:'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Atmosphere_layers-en.svg/320px-Atmosphere_layers-en.svg.png'
+    },
+
+    {
+      name:'바다 속 생명 지대',
+      era:'선캄브리아',
+      val:16,
+      desc:'바다에서 자외선을 피함',
+      img:'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Pacific_Ocean_underwater.jpg/320px-Pacific_Ocean_underwater.jpg'
+    },
+
+    {
+      name:'온난 환경',
+      era:'선캄브리아',
+      val:15,
+      desc:'따뜻한 환경이 유지됨',
+      img:'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Sun_in_Sky.jpg/320px-Sun_in_Sky.jpg'
+    },
+
+    {
+      name:'필석의 장막',
+      era:'고생대',
+      val:22,
+      desc:'고생대 바다의 대표 생물',
+      img:'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Graptolite.jpg/320px-Graptolite.jpg'
+    },
+
+    {
+      name:'방추충 장벽',
+      era:'고생대',
+      val:23,
+      desc:'고생대 말 대표 화석',
+      img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Fusulinid.jpg/320px-Fusulinid.jpg'
+    },
+
+    {
+      name:'오존층 차단막',
+      era:'고생대',
+      val:25,
+      desc:'육상 생물 출현에 도움',
+      img:'https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Ozone_cycle.svg/320px-Ozone_cycle.svg.png'
+    },
+
+    {
+      name:'겉씨식물 숲',
+      era:'중생대',
+      val:22,
+      desc:'소나무와 은행나무 등이 번성',
+      img:'https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Ginkgo_biloba_leaf_fossil.jpg/320px-Ginkgo_biloba_leaf_fossil.jpg'
+    },
+
+    {
+      name:'파충류의 번성',
+      era:'중생대',
+      val:26,
+      desc:'중생대 파충류가 번성',
+      img:'https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Allosaurus_SDSM_fossil.jpg/320px-Allosaurus_SDSM_fossil.jpg'
+    },
+
+    {
+      name:'대륙 분리',
+      era:'중생대',
+      val:24,
+      desc:'판게아가 분리됨',
+      img:'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Pangea_animation_03.gif/320px-Pangea_animation_03.gif'
+    },
+
+    {
+      name:'속씨식물 장막',
+      era:'신생대',
+      val:23,
+      desc:'다양한 속씨식물이 번성',
+      img:'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Acer_monspessulanum_fossil.jpg/320px-Acer_monspessulanum_fossil.jpg'
+    },
+
+    {
+      name:'포유류 대번성',
+      era:'신생대',
+      val:25,
+      desc:'다양한 환경에 적응한 포유류',
+      img:'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Saber_tooth_cat_skull.jpg/320px-Saber_tooth_cat_skull.jpg'
+    },
+
+    {
+      name:'산맥 형성',
+      era:'신생대',
+      val:28,
+      desc:'알프스와 히말라야 형성',
+      img:'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Matterhorn_from_Domh%C3%BCtte_-2.jpg/320px-Matterhorn_from_Domh%C3%BCtte_-2.jpg'
+    }
+
+  ],
+
+
+  SPECIAL: [
+
+    {
+      name:'빙하기',
+      era:['고생대','신생대'],
+      val:0,
+      targetRole:'ATTACKER',
+      desc:'공격자의 다음 공격 턴 유지',
+      img:'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Iceberg_in_Disko_Bay_2015.jpg/320px-Iceberg_in_Disko_Bay_2015.jpg'
+    },
+
+    {
+      name:'운석 충돌',
+      era:['중생대'],
+      val:40,
+      targetRole:'ATTACKER',
+      desc:'40의 확정 피해',
+      img:'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Chicxulub_impact_-_artist_impression.jpg/320px-Chicxulub_impact_-_artist_impression.jpg'
+    },
+
+    {
+      name:'판게아 형성',
+      era:['고생대'],
+      val:0,
+      targetRole:'DEFENDER',
+      desc:'받은 피해 반사',
+      img:'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Pangaea_continents.svg/320px-Pangaea_continents.svg.png'
+    }
+
+  ]
+
+};
+
+
+/* =========================================================
+   게임 변수
+========================================================= */
+
+let peer = null;
+let conn = null;
+
+let isHost = false;
+let myRole = '';
+let isMyTurn = false;
+
+let myGameState = {
+  hp:100,
+  hand:[]
+};
+
+let opponentGameState = {
+  hp:100,
+  cardCount:6
+};
+
+let selectedCardIndices = [];
+let currentAttackCards = [];
+
+let gameStarted = false;
+
+
+/* =========================================================
+   PeerJS 초기화
+========================================================= */
+
+function createPeer() {
+
+  setStatus('접속 ID를 생성하는 중...', '#fbbf24');
+
+  document.getElementById('my-id').innerText =
+    'ID 생성 중...';
+
+  peer = new Peer(undefined, {
+
+    debug: 1,
+
+    config: {
+
+      iceServers: [
+        {
+          urls:'stun:stun.l.google.com:19302'
+        },
+        {
+          urls:'stun:stun1.l.google.com:19302'
+        }
+      ]
+
+    }
+
+  });
+
+
+  peer.on('open', function(id) {
+
+    console.log('Peer ID:', id);
+
+    document.getElementById('my-id').innerText = id;
+
+    setStatus(
+      '준비 완료! 상대방에게 내 ID를 보내세요.',
+      '#10b981'
+    );
+
+  });
+
+
+  peer.on('error', function(error) {
+
+    console.error('PeerJS Error:', error);
+
+    let message = '연결 오류가 발생했습니다.';
+
+    if(error.type === 'peer-unavailable') {
+      message = '상대방 ID를 찾을 수 없습니다.';
+    }
+
+    if(error.type === 'network') {
+      message = '네트워크 연결을 확인해주세요.';
+    }
+
+    if(error.type === 'server-error') {
+      message = 'PeerJS 서버에 연결하지 못했습니다.';
+    }
+
+    if(error.type === 'unavailable-id') {
+      message = 'ID를 사용할 수 없습니다.';
+    }
+
+    setStatus(message, '#ef4444');
+
+  });
+
+
+  peer.on('connection', function(connection) {
+
+    if(conn && conn.open) {
+      connection.close();
+      return;
+    }
+
+    conn = connection;
+
+    isHost = true;
+
+    setupConnection();
+
+  });
+
+
+  peer.on('disconnected', function() {
+
+    setStatus(
+      'PeerJS 서버 연결이 끊어졌습니다. 재연결을 시도합니다.',
+      '#fbbf24'
+    );
+
+    try {
+      peer.reconnect();
+    } catch(e) {
+      console.error(e);
+    }
+
+  });
+
+
+  peer.on('close', function() {
+
+    setStatus(
+      '접속 ID가 종료되었습니다.',
+      '#ef4444'
+    );
+
+  });
+
+}
+
+
+/* =========================================================
+   ID 다시 만들기
+========================================================= */
+
+function recreatePeer() {
+
+  if(conn && conn.open) {
+    conn.close();
+  }
+
+  if(peer) {
+    try {
+      peer.destroy();
+    } catch(e) {}
+  }
+
+  conn = null;
+  gameStarted = false;
+
+  createPeer();
+
+}
+
+
+/* =========================================================
+   상대방 연결
+========================================================= */
+
+function connectToPeer() {
+
+  const input =
+    document.getElementById('peer-id-input');
+
+  const peerId =
+    input.value.trim();
+
+  if(!peerId) {
+
+    alert('상대방 ID를 입력하세요.');
+
+    return;
+  }
+
+  if(!peer) {
+
+    alert('내 접속 ID가 아직 생성되지 않았습니다.');
+
+    return;
+  }
+
+  if(peerId === peer.id) {
+
+    alert('자기 자신의 ID에는 연결할 수 없습니다.');
+
+    return;
+  }
+
+
+  setStatus(
+    '상대방에게 연결하는 중...',
+    '#fbbf24'
+  );
+
+
+  try {
+
+    conn = peer.connect(
+      peerId,
+      {
+        reliable:true,
+        serialization:'json'
+      }
+    );
+
+    isHost = false;
+
+    setupConnection();
+
+  } catch(error) {
+
+    console.error(error);
+
+    setStatus(
+      '연결에 실패했습니다.',
+      '#ef4444'
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   연결 설정
+========================================================= */
+
+function setupConnection() {
+
+  if(!conn) return;
+
+
+  conn.on('open', function() {
+
+    console.log('Data connection opened.');
+
+    setStatus(
+      '상대방과 연결되었습니다!',
+      '#10b981'
+    );
+
+    document.getElementById('lobby').style.display =
+      'none';
+
+    document.getElementById('game-board').style.display =
+      'flex';
+
+
+    addLog('🟢 상대방과 연결되었습니다.');
+
+
+    /*
+      호스트만 게임을 시작한다.
+      클라이언트는 INIT 메시지를 기다린다.
+    */
+
+    if(isHost) {
+
+      setTimeout(function() {
+
+        startHostGame();
+
+      }, 500);
+
+    }
+
+  });
+
+
+  conn.on('data', function(data) {
+
+    console.log('받은 데이터:', data);
+
+    handleData(data);
+
+  });
+
+
+  conn.on('close', function() {
+
+    alert(
+      '상대방과의 연결이 종료되었습니다.'
+    );
+
+    location.reload();
+
+  });
+
+
+  conn.on('error', function(error) {
+
+    console.error('Connection error:', error);
+
+    setStatus(
+      '상대방과 연결하는 중 오류가 발생했습니다.',
+      '#ef4444'
+    );
+
+  });
+
+}
+
+
+/* =========================================================
+   게임 시작
+========================================================= */
+
+function startHostGame() {
+
+  const attackerIsHost =
+    Math.random() < 0.5;
+
+
+  const hostRole =
+    attackerIsHost
+      ? 'ATTACKER'
+      : 'DEFENDER';
+
+  const guestRole =
+    attackerIsHost
+      ? 'DEFENDER'
+      : 'ATTACKER';
+
+
+  initGame(hostRole);
+
+
+  conn.send({
+
+    type:'INIT',
+
+    role:guestRole,
+
+    seed:Date.now()
+
+  });
+
+}
+
+
+/* =========================================================
+   초기 게임 상태
+========================================================= */
+
+function initGame(role) {
+
+  myRole = role;
+
+  isMyTurn =
+    myRole === 'ATTACKER';
+
+  myGameState.hp = 100;
+
+  myGameState.hand = [
+
+    drawRandomCard('ATTACK'),
+    drawRandomCard('ATTACK'),
+    drawRandomCard('ATTACK'),
+
+    drawRandomCard('DEFENSE'),
+    drawRandomCard('DEFENSE'),
+
+    drawRandomCard('SPECIAL')
+
+  ];
+
+  opponentGameState = {
+    hp:100,
+    cardCount:6
+  };
+
+  selectedCardIndices = [];
+
+  currentAttackCards = [];
+
+  gameStarted = true;
+
+  clearField();
+
+  updateUI();
+
+  addLog(
+    `🎮 게임 시작! 당신은 [${
+      myRole === 'ATTACKER'
+      ? '공격자'
+      : '방어자'
+    }]입니다.`
+  );
+
+}
+
+
+/* =========================================================
+   카드 뽑기
+========================================================= */
+
+function drawRandomCard(type) {
+
+  const pool =
+    CARD_DATABASE[type];
+
+  const template =
+    pool[
+      Math.floor(
+        Math.random() * pool.length
+      )
+    ];
+
+  return {
+    ...template,
+    type
+  };
+
+}
+
+
+/* =========================================================
+   네트워크 데이터 처리
+========================================================= */
+
+function handleData(data) {
+
+  if(!data || !data.type) return;
+
+
+  /* 게임 초기화 */
+
+  if(data.type === 'INIT') {
+
+    initGame(data.role);
+
+    return;
+
+  }
+
+
+  /* 공격 카드 제출 */
+
+  if(data.type === 'ATTACK_SUBMIT') {
+
+    currentAttackCards =
+      data.cards || [];
+
+    opponentGameState.cardCount =
+      data.opponentHandCount;
+
+    renderFieldCards(
+      'attack-cards-slot',
+      currentAttackCards
+    );
+
+    addLog(
+      '⚔️ 상대가 공격 카드를 제출했습니다.'
+    );
+
+    isMyTurn = true;
+
+    updateUI();
+
+    return;
+
+  }
+
+
+  /* 방어 카드 제출 */
+
+  if(data.type === 'DEFENSE_SUBMIT') {
+
+    opponentGameState.cardCount =
+      data.opponentHandCount;
+
+    renderFieldCards(
+      'defense-cards-slot',
+      data.cards || []
+    );
+
+    resolveBattle(
+      currentAttackCards,
+      data.cards || []
+    );
+
+    return;
+
+  }
+
+
+  /* 패스 */
+
+  if(data.type === 'PASS_DRAW') {
+
+    opponentGameState.cardCount =
+      data.opponentHandCount;
+
+
+    if(data.role === 'ATTACKER') {
+
+      addLog(
+        '↪️ 공격자가 드로우 후 패스했습니다.'
+      );
+
+      switchRoles(false);
+
+    } else {
+
+      addLog(
+        '🛡️ 방어자가 드로우 후 패스했습니다.'
+      );
+
+      resolveBattle(
+        currentAttackCards,
+        []
+      );
+
+    }
+
+    return;
+
+  }
+
+}
+
+
+/* =========================================================
+   카드 선택
+========================================================= */
+
+function toggleSelectCard(index) {
+
+  if(!isMyTurn) return;
+
+  const card =
+    myGameState.hand[index];
+
+  if(!card) return;
+
+
+  /* 역할 검사 */
+
+  if(myRole === 'ATTACKER') {
+
+    if(card.type === 'DEFENSE') {
+
+      alert(
+        '공격 턴에는 방어 카드를 사용할 수 없습니다.'
+      );
+
+      return;
+    }
+
+    if(
+      card.type === 'SPECIAL' &&
+      card.targetRole === 'DEFENDER'
+    ) {
+
+      alert(
+        '판게아 형성은 방어 시에만 사용할 수 있습니다.'
+      );
+
+      return;
+    }
+
+  }
+
+
+  if(myRole === 'DEFENDER') {
+
+    if(card.type === 'ATTACK') {
+
+      alert(
+        '방어 턴에는 공격 카드를 사용할 수 없습니다.'
+      );
+
+      return;
+    }
+
+    if(
+      card.type === 'SPECIAL' &&
+      card.targetRole === 'ATTACKER'
+    ) {
+
+      alert(
+        '빙하기/운석 충돌은 공격 시에만 사용할 수 있습니다.'
+      );
+
+      return;
+    }
+
+  }
+
+
+  const selected =
+    selectedCardIndices.indexOf(index);
+
+
+  if(selected >= 0) {
+
+    selectedCardIndices.splice(
+      selected,
+      1
+    );
+
+  } else {
+
+    if(selectedCardIndices.length >= 2) {
+
+      alert(
+        '한 번에 최대 2장까지만 사용할 수 있습니다.'
+      );
+
+      return;
+
+    }
+
+
+    const selectedCards =
+      selectedCardIndices.map(
+        i => myGameState.hand[i]
+      );
+
+    const newCards =
+      [...selectedCards, card];
+
+
+    const specialCard =
+      newCards.find(
+        c => c.type === 'SPECIAL'
+      );
+
+    const normalCard =
+      newCards.find(
+        c => c.type !== 'SPECIAL'
+      );
+
+
+    if(specialCard && normalCard) {
+
+      if(
+        !specialCard.era.includes(
+          normalCard.era
+        )
+      ) {
+
+        alert(
+          `[시대 불일치]\n\n` +
+          `${specialCard.name}은 ` +
+          `${specialCard.era.join(', ')}` +
+          ` 시대 카드와만 사용할 수 있습니다.`
+        );
+
+        return;
+
+      }
+
+    }
+
+
+    selectedCardIndices.push(index);
+
+  }
+
+
+  renderHand();
+
+  updateButtons();
+
+}
+
+
+/* =========================================================
+   카드 제출
+========================================================= */
+
+function submitSelectedCards() {
+
+  if(!isMyTurn) return;
+
+  if(selectedCardIndices.length === 0) {
+
+    alert('카드를 선택하세요.');
+
+    return;
+
+  }
+
+
+  selectedCardIndices.sort(
+    (a,b) => b-a
+  );
+
+
+  const playedCards =
+    selectedCardIndices.map(
+      i => myGameState.hand.splice(i,1)[0]
+    );
+
+
+  selectedCardIndices = [];
+
+
+  if(myRole === 'ATTACKER') {
+
+    currentAttackCards =
+      playedCards;
+
+    renderFieldCards(
+      'attack-cards-slot',
+      playedCards
+    );
+
+    isMyTurn = false;
+
+    updateUI();
+
+
+    conn.send({
+
+      type:'ATTACK_SUBMIT',
+
+      cards:playedCards,
+
+      opponentHandCount:
+        myGameState.hand.length
+
+    });
+
+
+    addLog(
+      '⚔️ 공격 카드를 제출했습니다.'
+    );
+
+  } else {
+
+    renderFieldCards(
+      'defense-cards-slot',
+      playedCards
+    );
+
+
+    conn.send({
+
+      type:'DEFENSE_SUBMIT',
+
+      cards:playedCards,
+
+      opponentHandCount:
+        myGameState.hand.length
+
+    });
+
+
+    isMyTurn = false;
+
+    updateUI();
+
+
+    resolveBattle(
+      currentAttackCards,
+      playedCards
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   드로우 & 패스
+========================================================= */
+
+function passAndDraw() {
+
+  if(!isMyTurn) return;
+
+
+  if(myGameState.hand.length < 10) {
+
+    const types = [
+      'ATTACK',
+      'DEFENSE',
+      'SPECIAL'
+    ];
+
+    const randomType =
+      types[
+        Math.floor(
+          Math.random() * types.length
+        )
+      ];
+
+    myGameState.hand.push(
+      drawRandomCard(randomType)
+    );
+
+    addLog(
+      '🃏 카드를 1장 드로우했습니다.'
+    );
+
+  } else {
+
+    addLog(
+      '⚠️ 손패가 가득 차서 카드를 뽑지 못했습니다.'
+    );
+
+  }
+
+
+  isMyTurn = false;
+
+  updateUI();
+
+
+  const currentRole =
+    myRole;
+
+
+  conn.send({
+
+    type:'PASS_DRAW',
+
+    role:currentRole,
+
+    opponentHandCount:
+      myGameState.hand.length
+
+  });
+
+
+  if(currentRole === 'ATTACKER') {
+
+    switchRoles(false);
+
+  } else {
+
+    resolveBattle(
+      currentAttackCards,
+      []
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   전투 판정
+========================================================= */
+
+function resolveBattle(
+  attackCards,
+  defenseCards
+) {
+
+  let normalAtkVal = 0;
+
+  let meteorDmg = 0;
+
+  let isPangaea = false;
+
+  let freezeApplied = false;
+
+
+  attackCards.forEach(card => {
+
+    if(card.type === 'ATTACK') {
+
+      normalAtkVal += card.val;
+
+    }
+
+    if(card.name === '운석 충돌') {
+
+      meteorDmg = 40;
+
+    }
+
+    if(card.name === '빙하기') {
+
+      freezeApplied = true;
+
+    }
+
+  });
+
+
+  let totalDefVal = 0;
+
+  let hasSpecialDefense = false;
+
+  let eraMatched = false;
+
+
+  const mainAtkEra =
+    attackCards.find(
+      c => c.type === 'ATTACK'
+    )?.era;
+
+
+  defenseCards.forEach(card => {
+
+    if(card.type === 'DEFENSE') {
+
+      if(
+        mainAtkEra &&
+        card.era === mainAtkEra
+      ) {
+
+        totalDefVal += card.val;
+
+        eraMatched = true;
+
+      }
+
+    }
+
+
+    if(card.type === 'SPECIAL') {
+
+      hasSpecialDefense = true;
+
+      if(card.name === '판게아 형성') {
+
+        isPangaea = true;
+
+      }
+
+    }
+
+  });
+
+
+  let normalDamage = 0;
+
+
+  if(
+    attackCards.some(
+      c => c.type === 'ATTACK'
+    )
+  ) {
+
+
+    if(hasSpecialDefense) {
+
+      normalDamage =
+        normalAtkVal;
+
+      addLog(
+        `✨ 특수 방어! 일반 공격 피해 ${normalDamage}`
+      );
+
+    }
+
+
+    else if(defenseCards.length === 0) {
+
+      normalDamage =
+        normalAtkVal;
+
+      addLog(
+        `🛡️ 방어 패스! 피해 ${normalDamage}`
+      );
+
+    }
+
+
+    else if(eraMatched) {
+
+      normalDamage =
+        Math.max(
+          0,
+          normalAtkVal - totalDefVal
+        );
+
+      addLog(
+        `⭕ 시대 일치! ` +
+        `${normalAtkVal} - ${totalDefVal} = ` +
+        `${normalDamage} 피해`
+      );
+
+    }
+
+
+    else {
+
+      normalDamage =
+        normalAtkVal * 2;
+
+      addLog(
+        `❌ 시대 불일치! ` +
+        `피해가 2배가 되어 ${normalDamage}`
+      );
+
+    }
+
+  }
+
+
+  if(meteorDmg > 0) {
+
+    addLog(
+      `☄️ 운석 충돌! 확정 피해 ${meteorDmg}`
+    );
+
+  }
+
+
+  const finalDamage =
+    meteorDmg + normalDamage;
+
+
+  /* 피해 적용 */
+
+  if(myRole === 'DEFENDER') {
+
+    myGameState.hp =
+      Math.max(
+        0,
+        myGameState.hp - finalDamage
+      );
+
+
+    if(isPangaea) {
+
+      opponentGameState.hp =
+        Math.max(
+          0,
+          opponentGameState.hp - finalDamage
+        );
+
+      addLog(
+        `🌍 판게아 형성! ${finalDamage} 피해 반사`
+      );
+
+    }
+
+  }
+
+
+  else {
+
+    opponentGameState.hp =
+      Math.max(
+        0,
+        opponentGameState.hp - finalDamage
+      );
+
+
+    if(isPangaea) {
+
+      myGameState.hp =
+        Math.max(
+          0,
+          myGameState.hp - finalDamage
+        );
+
+      addLog(
+        `🌍 판게아 형성! 피해 ${finalDamage} 반사`
+      );
+
+    }
+
+  }
+
+
+  updateUI();
+
+
+  /* 승패 */
+
+  if(
+    myGameState.hp <= 0 ||
+    opponentGameState.hp <= 0
+  ) {
+
+    setTimeout(() => {
+
+      if(
+        myGameState.hp <= 0 &&
+        opponentGameState.hp <= 0
+      ) {
+
+        alert('🤝 무승부입니다!');
+
+      }
+
+      else if(myGameState.hp <= 0) {
+
+        alert('💀 패배했습니다.');
+
+      }
+
+      else {
+
+        alert('🎉 승리했습니다!');
+
+      }
+
+      location.reload();
+
+    },700);
+
+    return;
+
+  }
+
+
+  setTimeout(() => {
+
+    clearField();
+
+    switchRoles(
+      freezeApplied
+    );
+
+  },2500);
+
+}
+
+
+/* =========================================================
+   역할 교대
+========================================================= */
+
+function switchRoles(freezeApplied) {
+
+  if(freezeApplied) {
+
+    addLog(
+      '❄️ 빙하기 발동! 공격자의 연속 공격!'
+    );
+
+    isMyTurn =
+      myRole === 'ATTACKER';
+
+  }
+
+  else {
+
+    myRole =
+      myRole === 'ATTACKER'
+        ? 'DEFENDER'
+        : 'ATTACKER';
+
+    isMyTurn =
+      myRole === 'ATTACKER';
+
+  }
+
+
+  selectedCardIndices = [];
+
+  updateUI();
+
+
+  addLog(
+    `--- 역할 교대: ${
+      myRole === 'ATTACKER'
+        ? '공격자'
+        : '방어자'
+    } ---`
+  );
+
+}
+
+
+/* =========================================================
+   UI 업데이트
+========================================================= */
+
+function updateUI() {
+
+  document.getElementById(
+    'my-role'
+  ).innerText =
+    myRole === 'ATTACKER'
+      ? '공격자'
+      : '방어자';
+
+
+  document.getElementById(
+    'opponent-role'
+  ).innerText =
+    myRole === 'ATTACKER'
+      ? '방어자'
+      : '공격자';
+
+
+  document.getElementById(
+    'my-hp'
+  ).innerText =
+    myGameState.hp;
+
+
+  document.getElementById(
+    'my-hp-bar'
+  ).style.width =
+    myGameState.hp + '%';
+
+
+  document.getElementById(
+    'opponent-hp'
+  ).innerText =
+    opponentGameState.hp;
+
+
+  document.getElementById(
+    'opponent-hp-bar'
+  ).style.width =
+    opponentGameState.hp + '%';
+
+
+  document.getElementById(
+    'my-card-count'
+  ).innerText =
+    myGameState.hand.length;
+
+
+  document.getElementById(
+    'opponent-card-count'
+  ).innerText =
+    opponentGameState.cardCount;
+
+
+  const turn =
+    document.getElementById(
+      'turn-indicator'
+    );
+
+
+  if(isMyTurn) {
+
+    if(myRole === 'ATTACKER') {
+
+      turn.innerText =
+        '⚔️ 내 차례: 공격 카드 또는 특수 카드를 선택하세요.';
+
+    }
+
+    else {
+
+      turn.innerText =
+        '🛡️ 내 차례: 방어 카드를 선택하거나 패스하세요.';
+
+    }
+
+  }
+
+  else {
+
+    turn.innerText =
+      '⏳ 상대방의 선택을 기다리는 중...';
+
+  }
+
+
+  renderHand();
+
+  updateButtons();
+
+}
+
+
+/* =========================================================
+   손패 렌더링
+========================================================= */
+
+function renderHand() {
+
+  const hand =
+    document.getElementById(
+      'my-hand'
+    );
+
+  hand.innerHTML = '';
+
+
+  myGameState.hand.forEach(
+    (card,index) => {
+
+      const element =
+        document.createElement('div');
+
+
+      const selected =
+        selectedCardIndices.includes(index);
+
+
+      let disabled =
+        !isMyTurn;
+
+
+      if(myRole === 'ATTACKER') {
+
+        if(card.type === 'DEFENSE') {
+
+          disabled = true;
+
+        }
+
+        if(
+          card.type === 'SPECIAL' &&
+          card.targetRole === 'DEFENDER'
+        ) {
+
+          disabled = true;
+
+        }
+
+      }
+
+
+      if(myRole === 'DEFENDER') {
+
+        if(card.type === 'ATTACK') {
+
+          disabled = true;
+
+        }
+
+        if(
+          card.type === 'SPECIAL' &&
+          card.targetRole === 'ATTACKER'
+        ) {
+
+          disabled = true;
+
+        }
+
+      }
+
+
+      const typeText =
+        card.type === 'ATTACK'
+          ? '공격'
+          : card.type === 'DEFENSE'
+            ? '방어'
+            : '특수';
+
+
+      const eraText =
+        Array.isArray(card.era)
+          ? card.era.join('/')
+          : card.era;
+
+
+      element.className =
+        `card ${card.type} ` +
+        `${selected ? 'selected' : ''} ` +
+        `${disabled ? 'disabled' : ''}`;
+
+
+      element.innerHTML = `
+
+        <div>
+          <span class="card-type-tag">
+            ${typeText}
+          </span>
+
+          <span style="
+            font-size:8px;
+            color:#aaa;
+          ">
+            (${eraText})
+          </span>
+        </div>
+
+        <div class="card-title">
+          ${card.name}
+        </div>
+
+        <img
+          class="card-img"
+          src="${card.img}"
+          alt="${card.name}"
+          onerror="this.style.display='none'"
+        >
+
+        <div class="card-desc">
+          ${card.desc}
+        </div>
+
+        <div class="card-val">
+          ${card.val > 0 ? card.val : ''}
+        </div>
+
+      `;
+
+
+      element.onclick =
+        () => {
+
+          if(!disabled) {
+
+            toggleSelectCard(index);
+
+          }
+
+        };
+
+
+      hand.appendChild(element);
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   전투 필드 카드
+========================================================= */
+
+function renderFieldCards(
+  slotId,
+  cards
+) {
+
+  const slot =
+    document.getElementById(
+      slotId
+    );
+
+  slot.innerHTML = '';
+
+
+  cards.forEach(card => {
+
+    const element =
+      document.createElement('div');
+
+
+    element.className =
+      `card ${card.type}`;
+
+
+    element.style.cursor =
+      'default';
+
+
+    element.innerHTML = `
+
+      <div>
+        <span class="card-type-tag">
+          ${
+            card.type === 'ATTACK'
+              ? '공격'
+              : card.type === 'DEFENSE'
+                ? '방어'
+                : '특수'
+          }
+        </span>
+      </div>
+
+      <div class="card-title">
+        ${card.name}
+      </div>
+
+      <img
+        class="card-img"
+        src="${card.img}"
+        alt="${card.name}"
+        onerror="this.style.display='none'"
+      >
+
+      <div class="card-val">
+        ${card.val > 0 ? card.val : ''}
+      </div>
+
+    `;
+
+
+    slot.appendChild(element);
+
+  });
+
+}
+
+
+/* =========================================================
+   필드 초기화
+========================================================= */
+
+function clearField() {
+
+  document.getElementById(
+    'attack-cards-slot'
+  ).innerHTML = '';
+
+
+  document.getElementById(
+    'defense-cards-slot'
+  ).innerHTML = '';
+
+
+  currentAttackCards = [];
+
+}
+
+
+/* =========================================================
+   버튼 상태
+========================================================= */
+
+function updateButtons() {
+
+  document.getElementById(
+    'btn-submit'
+  ).disabled =
+    !isMyTurn ||
+    selectedCardIndices.length === 0;
+
+
+  document.getElementById(
+    'btn-draw'
+  ).disabled =
+    !isMyTurn;
+
+}
+
+
+/* =========================================================
+   로그
+========================================================= */
+
+function addLog(message) {
+
+  const log =
+    document.getElementById(
+      'log'
+    );
+
+
+  const div =
+    document.createElement('div');
+
+
+  div.textContent =
+    '• ' + message;
+
+
+  log.appendChild(div);
+
+
+  log.scrollTop =
+    log.scrollHeight;
+
+}
+
+
+/* =========================================================
+   상태 메시지
+========================================================= */
+
+function setStatus(
+  message,
+  color
+) {
+
+  const status =
+    document.getElementById(
+      'status-msg'
+    );
+
+  status.innerText =
+    message;
+
+  if(color) {
+
+    status.style.color =
+      color;
+
+  }
+
+}
+
+
+/* =========================================================
+   ID 복사
+========================================================= */
+
+async function copyMyId() {
+
+  const id =
+    document.getElementById(
+      'my-id'
+    ).innerText;
+
+
+  if(
+    !id ||
+    id === 'ID 생성 중...'
+  ) {
+
+    alert(
+      '아직 ID가 생성되지 않았습니다.'
+    );
+
+    return;
+
+  }
+
+
+  try {
+
+    await navigator.clipboard.writeText(id);
+
+    setStatus(
+      '접속 ID가 복사되었습니다!',
+      '#10b981'
+    );
+
+  }
+
+  catch(error) {
+
+    prompt(
+      '아래 ID를 복사하세요.',
+      id
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   페이지 시작
+========================================================= */
+
+window.addEventListener(
+  'load',
+  function() {
+
+    createPeer();
+
+  }
+);
+
+</script>
+
+</body>
+</html>
