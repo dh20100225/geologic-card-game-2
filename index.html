@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>지질시대 추리 카드 대전</title>
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+  <style>
+    :root {
+      --bg-dark: #0f141d;
+      --panel-bg: rgba(22, 28, 41, 0.9);
+      --card-bg: #1c2333;
+      --border-color: #2e384e;
+      --text-main: #f0f3f8;
+      --text-sub: #8b9bb4;
+      --accent-gold: #fbbf24;
+      --hp-green: #22c55e;
+      --hp-red: #ef4444;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', 'Malgun Gothic', sans-serif; user-select: none; }
+    body { background-color: var(--bg-dark); color: var(--text-main); display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; overflow-x: hidden; padding: 10px; }
+
+    /* 로비 스타일 */
+    #lobby {
+      background: var(--panel-bg);
+      border: 2px solid var(--border-color);
+      padding: 30px;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 460px;
+      text-align: center;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.6);
+      backdrop-filter: blur(10px);
+    }
+    #lobby h2 { font-size: 24px; margin-bottom: 10px; color: #fff; }
+    .input-group { margin: 20px 0; display: flex; gap: 8px; }
+    input { flex: 1; padding: 12px 15px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(10, 14, 23, 0.8); color: #fff; font-size: 15px; outline: none; }
+    input:focus { border-color: var(--accent-gold); }
+    button.btn-primary { padding: 12px 20px; border: none; border-radius: 8px; background: #3b82f6; color: #fff; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    button.btn-primary:hover { background: #2563eb; }
+
+    /* 메인 게임 보드 컨테이너 */
+    #game-board {
+      display: none;
+      width: 100%;
+      max-width: 1100px;
+      flex-direction: column;
+      gap: 12px;
+      position: relative;
+    }
+
+    /* Top Bar */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      height: 50px;
+    }
+    .my-id-btn {
+      background: rgba(22, 28, 41, 0.8);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      color: #e2e8f0;
+    }
+    .my-id-btn:hover { background: rgba(45, 55, 72, 0.8); }
+    .game-title-banner {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      top: -5px;
+      background: linear-gradient(180deg, #3a2e2b 0%, #1e1918 100%);
+      border: 3px solid #8c6a4a;
+      border-radius: 12px;
+      padding: 6px 24px;
+      font-size: 22px;
+      font-weight: 900;
+      color: #fff;
+      text-shadow: 2px 2px 4px #000;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+      letter-spacing: 1px;
+    }
+    .connection-status {
+      background: rgba(22, 28, 41, 0.8);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #10b981;
+    }
+
+    /* 전장 (Battle Arena) */
+    .battle-arena {
+      height: 320px;
+      border-radius: 16px;
+      border: 2px solid var(--border-color);
+      position: relative;
+      overflow: hidden;
+      background: radial-gradient(circle, #2d3748 0%, #0f172a 100%);
+      display: flex;
+      justify-content: space-between;
+      padding: 20px;
+      box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
+    }
+    .arena-bg-layer {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80') center/cover no-repeat;
+      opacity: 0.25;
+      pointer-events: none;
+    }
+
+    .player-profile {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 2;
+    }
+    .avatar {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      background: #2a3447;
+      border: 2px solid #475569;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    }
+    .profile-info { display: flex; flex-direction: column; gap: 4px; }
+    .player-name { font-weight: bold; font-size: 15px; }
+    .hp-container {
+      width: 160px;
+      height: 18px;
+      background: rgba(0,0,0,0.6);
+      border-radius: 9px;
+      overflow: hidden;
+      position: relative;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .hp-fill {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%);
+      transition: width 0.4s ease;
+    }
+    .hp-text {
+      position: absolute;
+      right: 8px; top: 50%;
+      transform: translateY(-50%);
+      font-size: 11px;
+      font-weight: bold;
+      color: #fff;
+      text-shadow: 1px 1px 2px #000;
+    }
+    .card-count-badge { font-size: 12px; color: var(--text-sub); display: flex; align-items: center; gap: 4px; margin-top: 2px; }
+
+    /* VS 및 카드 필드 */
+    .vs-badge {
+      position: absolute;
+      left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      width: 70px; height: 70px;
+      background: #1e293b;
+      border: 3px solid #475569;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: 900;
+      color: #f8fafc;
+      box-shadow: 0 0 20px rgba(0,0,0,0.8);
+      z-index: 3;
+    }
+    .vs-line {
+      position: absolute;
+      left: 50%; top: 0; bottom: 0;
+      width: 2px;
+      background: linear-gradient(180deg, transparent, rgba(251, 191, 36, 0.4), transparent);
+      z-index: 1;
+    }
+
+    .field-slots {
+      position: absolute;
+      top: 110px;
+      display: flex;
+      gap: 8px;
+      z-index: 2;
+    }
+    .field-slots.left { left: 30px; }
+    .field-slots.right { right: 30px; }
+    .slot-placeholder {
+      width: 85px; height: 125px;
+      border: 2px dashed rgba(255,255,255,0.15);
+      border-radius: 8px;
+      background: rgba(0,0,0,0.2);
+    }
+
+    /* 하단 대시보드 (손패 & 액션) */
+    .bottom-dashboard {
+      background: var(--panel-bg);
+      border: 2px solid var(--border-color);
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .deck-info {
+      width: 85px; height: 130px;
+      border: 2px solid var(--border-color);
+      border-radius: 10px;
+      background: rgba(15, 23, 42, 0.6);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .deck-icon { font-size: 24px; opacity: 0.5; }
+    .deck-title { font-size: 11px; color: var(--text-sub); }
+    .deck-count { font-size: 16px; font-weight: bold; color: #fff; }
+
+    .hand-container {
+      flex: 1;
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding: 5px 2px;
+      min-height: 140px;
+      align-items: center;
+    }
+
+    /* 카드 컴포넌트 */
+    .card-item {
+      width: 95px;
+      height: 135px;
+      border-radius: 10px;
+      background: var(--card-bg);
+      border: 2px solid #475569;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 6px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      flex-shrink: 0;
+    }
+    .card-item:hover { transform: translateY(-8px); box-shadow: 0 8px 16px rgba(0,0,0,0.5); }
+    .card-item.selected {
+      border-color: var(--accent-gold) !important;
+      transform: translateY(-12px);
+      box-shadow: 0 0 15px rgba(251, 191, 36, 0.6) !important;
+    }
+    .card-item.disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; }
+
+    .card-item.ATTACK { border-color: #22c55e; }
+    .card-item.DEFENSE { border-color: #3b82f6; }
+    .card-item.SPECIAL { border-color: #a855f7; }
+    .card-item.ULTIMATE-ATK {
+      border-color: #f59e0b;
+      box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
+      background: linear-gradient(135deg, #2d1810 0%, #1c2333 100%);
+    }
+    .card-item.ULTIMATE-DEF {
+      border-color: #38bdf8;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+      background: linear-gradient(135deg, #0c2a38 0%, #1c2333 100%);
+    }
+
+    .card-img-wrapper {
+      width: 100%;
+      height: 60px;
+      border-radius: 6px;
+      overflow: hidden;
+      background: #000;
+      margin-top: 2px;
+    }
+    .card-img-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+    .card-stat-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      font-weight: 800;
+      font-size: 15px;
+      color: #fff;
+      background: rgba(0,0,0,0.4);
+      border-radius: 6px;
+      padding: 2px 0;
+    }
+
+    .ultimate-slot-info {
+      width: 85px; height: 130px;
+      border: 2px dashed #f59e0b;
+      border-radius: 10px;
+      background: rgba(245, 158, 11, 0.05);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 6px;
+      flex-shrink: 0;
+    }
+    .ultimate-slot-info span { font-size: 11px; color: var(--accent-gold); font-weight: bold; }
+
+    /* Bottom Control Bar */
+    .bottom-controls {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+    .log-box {
+      flex: 1;
+      height: 50px;
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 0 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: #cbd5e1;
+      overflow: hidden;
+    }
+    .btn-turn-end {
+      height: 50px;
+      padding: 0 30px;
+      background: #334155;
+      border: 1px solid #475569;
+      border-radius: 12px;
+      color: #fff;
+      font-weight: bold;
+      font-size: 15px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .btn-turn-end:not(:disabled):hover { background: #475569; }
+    .btn-turn-end.active { background: var(--accent-gold); color: #000; border-color: #d97706; }
+    .btn-turn-end:disabled { opacity: 0.4; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+
+  <!-- 로비 화면 -->
+  <div id="lobby">
+    <h2>🌋 지질시대 추리 카드 대전</h2>
+    <p style="font-size: 13px; color: var(--text-sub); margin-top: 6px;">상대방의 접속 ID를 입력해 연결을 시작하세요.</p>
+    <div style="margin: 20px 0; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px;">
+      <span style="font-size: 12px; color: var(--text-sub);">내 접속 ID: </span>
+      <b id="my-id" style="color: var(--accent-gold); font-size: 15px; margin-left: 5px;">생성 중...</b>
+    </div>
+    <div class="input-group">
+      <input type="text" id="peer-id-input" placeholder="상대방 ID 입력">
+      <button class="btn-primary" onclick="connectToPeer()">연결하기</button>
+    </div>
+    <p id="status-msg" style="color: var(--accent-gold); font-size: 13px;"></p>
+  </div>
+
+  <!-- 인게임 메인 보드 -->
+  <div id="game-board">
+    
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <div class="my-id-btn" onclick="copyMyId()">
+        <span>내 접속 ID: <b id="top-my-id" style="color:#fff;">-</b></span>
+        <span style="opacity: 0.6;">📋</span>
+      </div>
+      
+      <div class="game-title-banner">지질시대 추리 카드 대전</div>
+
+      <div class="connection-status">
+        <span style="width: 8px; height: 8px; background: #10b981; border-radius: 50%;"></span>
+        <span>연결됨</span>
+      </div>
+    </div>
+
+    <!-- Battle Arena -->
+    <div class="battle-arena">
+      <div class="arena-bg-layer"></div>
+      
+      <!-- 내 프로필 (좌측) -->
+      <div class="player-profile">
+        <div class="avatar">👤</div>
+        <div class="profile-info">
+          <div class="player-name">나</div>
+          <div class="hp-container">
+            <div class="hp-fill" id="my-hp-bar"></div>
+            <div class="hp-text"><span id="my-hp">100</span></div>
+          </div>
+          <div class="card-count-badge">보유 카드 🎴 <span id="my-hand-count-text">0</span></div>
+        </div>
+      </div>
+
+      <div class="vs-line"></div>
+      <div class="vs-badge">VS</div>
+
+      <!-- 내 제출 카드 슬롯 -->
+      <div class="field-slots left" id="my-field-slots">
+        <div class="slot-placeholder"></div>
+        <div class="slot-placeholder"></div>
+      </div>
+
+      <!-- 상대 제출 카드 슬롯 -->
+      <div class="field-slots right" id="opponent-field-slots">
+        <div class="slot-placeholder"></div>
+        <div class="slot-placeholder"></div>
+      </div>
+
+      <!-- 상대 프로필 (우측) -->
+      <div class="player-profile" style="flex-direction: row-reverse;">
+        <div class="avatar" style="background: #451a1a; border-color: #7f1d1d;">👤</div>
+        <div class="profile-info" style="align-items: flex-end;">
+          <div class="player-name">상대방</div>
+          <div class="hp-container">
+            <div class="hp-fill" id="opponent-hp-bar" style="background: linear-gradient(90deg, #ef4444 0%, #f87171 100%);"></div>
+            <div class="hp-text"><span id="opponent-hp">100</span></div>
+          </div>
+          <div class="card-count-badge">보유 카드 🎴 <span id="opponent-hand-count-text">6</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 하단 대시보드 (손패 영역) -->
+    <div class="bottom-dashboard">
+      <!-- 덱 -->
+      <div class="deck-info">
+        <div class="deck-icon">🎴</div>
+        <div class="deck-title">덱</div>
+        <div style="font-size: 10px; color: var(--text-sub);">남은 카드</div>
+        <div class="deck-count" id="deck-remaining-count">30</div>
+      </div>
+
+      <!-- 내 손패 -->
+      <div class="hand-container" id="my-hand"></div>
+
+      <!-- 궁극기 안내 슬롯 -->
+      <div class="ultimate-slot-info">
+        <span style="font-size: 20px; margin-bottom: 4px;">💥</span>
+        <span>궁극기 카드</span>
+        <span style="font-size: 10px; color: var(--text-sub); margin-top: 2px;">(7%)</span>
+      </div>
+    </div>
+
+    <!-- 하단 컨트롤 & 로그 -->
+    <div class="bottom-controls">
+      <div class="log-box">
+        <span style="font-size: 16px;">💬</span>
+        <span id="log-text">게임을 시작하는 중입니다...</span>
+      </div>
+      <button class="btn-turn-end" id="btn-action" onclick="handleActionButton()" disabled>턴 종료</button>
+    </div>
+
+  </div>
+
+<script>
+  const CARD_DATABASE = {
+    ATTACK: [
+      { name: '티라노사우루스', era: '중생대', val: 25, desc: '중생대 대표 최상위 포식자', img: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=300&q=80' },
+      { name: '삼엽충', era: '고생대', val: 15, desc: '고생대 바다를 누빈 표준화석', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/Trilobite_Koneprusia.jpg/320px-Trilobite_Koneprusia.jpg' },
+      { name: '매머드', era: '신생대', val: 22, desc: '빙하기를 호령한 대형 포유류', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Mammuthus_primigenius_pennsylvanicus.jpg/320px-Mammuthus_primigenius_pennsylvanicus.jpg' },
+      { name: '스트로마톨라이트', era: '선캄브리아', val: 18, desc: '바다 속 최초 생명체 흔적', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Stromatolite_in_Soos_Quarry.jpg/320px-Stromatolite_in_Soos_Quarry.jpg' }
+    ],
+    DEFENSE: [
+      { name: '수중 적응', era: '중생대', val: 20, desc: '어룡과 수중 생물의 완벽한 방어', img: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=300&q=80' },
+      { name: '갑주', era: '고생대', val: 18, desc: '단단한 피부와 투구 방어력', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/Dunkleosteus_terrelli_page.jpg/320px-Dunkleosteus_terrelli_page.jpg' },
+      { name: '털 방한', era: '신생대', val: 20, desc: '극한의 빙하기를 견뎌내는 피부', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Iceberg_in_Disko_Bay_2015.jpg/320px-Iceberg_in_Disko_Bay_2015.jpg' }
+    ],
+    ULTIMATE: [
+      { name: '운석 충돌', era: '전시대', val: 50, typeTag: 'ULTIMATE-ATK', subType: 'ATTACK', desc: '★궁극기: 방어 무관 확정 50 피해', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Chicxulub_impact_-_artist_impression.jpg/320px-Chicxulub_impact_-_artist_impression.jpg' },
+      { name: '새로운 시대', era: '전시대', val: 50, typeTag: 'ULTIMATE-DEF', subType: 'DEFENSE', desc: '★궁극기: 확정 방어 50 제공', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Earth_Eastern_Hemisphere.jpg/320px-Earth_Eastern_Hemisphere.jpg' }
+    ]
+  };
+
+  let peer, conn;
+  let isHost = false;
+  let myRole = ''; 
+  let isMyTurn = false;
+  let totalDeckRemaining = 30;
+
+  let myGameState = { hp: 100, hand: [] };
+  let opponentGameState = { hp: 100, cardCount: 6 };
+  let selectedCardIndices = [];
+
+  peer = new Peer();
+  peer.on('open', (id) => {
+    document.getElementById('my-id').innerText = id;
+    document.getElementById('top-my-id').innerText = id;
+  });
+  peer.on('connection', (connection) => { conn = connection; isHost = true; setupConnection(); });
+
+  function connectToPeer() {
+    const peerId = document.getElementById('peer-id-input').value.trim();
+    if (!peerId) return alert('상대방 ID를 입력하세요!');
+    conn = peer.connect(peerId);
+    isHost = false;
+    setupConnection();
+  }
+
+  function setupConnection() {
+    document.getElementById('status-msg').innerText = '연결 중...';
+    conn.on('open', () => {
+      document.getElementById('lobby').style.display = 'none';
+      document.getElementById('game-board').style.display = 'flex';
+      setLog('상대방과 성공적으로 연결되었습니다.');
+      
+      if (isHost) {
+        const coinFlip = Math.random() < 0.5;
+        initGame(coinFlip ? 'ATTACKER' : 'DEFENDER');
+        conn.send({ type: 'INIT', role: coinFlip ? 'DEFENDER' : 'ATTACKER' });
+      }
+    });
+    conn.on('data', (data) => handleData(data));
+  }
+
+  function initGame(role) {
+    myRole = role;
+    myGameState.hp = 100;
+    myGameState.hand = [];
+    
+    // 초기 5장 드로우
+    for(let i=0; i<5; i++) {
+      myGameState.hand.push(drawCardWithProbability());
+    }
+
+    isMyTurn = (myRole === 'ATTACKER');
+    updateUI();
+    setLog(`게임을 시작합니다. 당신은 [${myRole === 'ATTACKER' ? '선공(공격)' : '후공(방어)'}] 입니다.`);
+  }
+
+  function drawCardWithProbability() {
+    totalDeckRemaining = Math.max(0, totalDeckRemaining - 1);
+    document.getElementById('deck-remaining-count').innerText = totalDeckRemaining;
+
+    if (Math.random() < 0.07) {
+      const pool = CARD_DATABASE.ULTIMATE;
+      return { ...pool[Math.floor(Math.random() * pool.length)] };
+    } else {
+      const isAtk = Math.random() < 0.5;
+      const pool = isAtk ? CARD_DATABASE.ATTACK : CARD_DATABASE.DEFENSE;
+      const item = pool[Math.floor(Math.random() * pool.length)];
+      return { ...item, typeTag: isAtk ? 'ATTACK' : 'DEFENSE', subType: isAtk ? 'ATTACK' : 'DEFENSE' };
+    }
+  }
+
+  function handleData(data) {
+    if (data.type === 'INIT') {
+      initGame(data.role);
+    } else if (data.type === 'ATTACK_SUBMIT') {
+      renderFieldSlots('opponent-field-slots', data.cards);
+      opponentGameState.cardCount = data.opponentHandCount;
+      setLog('상대방이 공격 카드를 제출했습니다. 방어할 카드를 내거나 턴을 종료하세요.');
+      isMyTurn = true;
+      updateUI();
+    } else if (data.type === 'PASS_DRAW') {
+      opponentGameState.cardCount = data.opponentHandCount;
+      setLog('상대방이 턴을 패스하고 카드를 1장 드로우했습니다.');
+      isMyTurn = true;
+      updateUI();
+    }
+  }
+
+  function toggleSelectCard(index) {
+    if (!isMyTurn) return;
+    const card = myGameState.hand[index];
+
+    const selIndex = selectedCardIndices.indexOf(index);
+    if (selIndex > -1) {
+      selectedCardIndices.splice(selIndex, 1);
+    } else {
+      if (selectedCardIndices.length >= 2) return alert('한 턴에 최대 2장까지만 선택할 수 있습니다.');
+      selectedCardIndices.push(index);
+    }
+    renderHand();
+    updateButtons();
+  }
+
+  function handleActionButton() {
+    if (!isMyTurn) return;
+
+    if (selectedCardIndices.length === 0) {
+      // 카드 미선택 시 드로우 후 Pass
+      if (myGameState.hand.length < 10) {
+        myGameState.hand.push(drawCardWithProbability());
+      }
+      isMyTurn = false;
+      conn.send({ type: 'PASS_DRAW', opponentHandCount: myGameState.hand.length });
+      setLog('카드를 1장 드로우하고 턴을 넘겼습니다.');
+    } else {
+      // 선택 카드 제출
+      selectedCardIndices.sort((a,b) => b - a);
+      const playedCards = selectedCardIndices.map(i => myGameState.hand.splice(i, 1)[0]);
+      selectedCardIndices = [];
+
+      renderFieldSlots('my-field-slots', playedCards);
+      isMyTurn = false;
+      conn.send({ type: 'ATTACK_SUBMIT', cards: playedCards, opponentHandCount: myGameState.hand.length });
+      setLog('카드를 제출했습니다. 상대방의 결정을 기다리는 중...');
+    }
+
+    updateUI();
+  }
+
+  function updateUI() {
+    document.getElementById('my-hp').innerText = myGameState.hp;
+    document.getElementById('my-hp-bar').style.width = myGameState.hp + '%';
+    document.getElementById('opponent-hp').innerText = opponentGameState.hp;
+    document.getElementById('opponent-hp-bar').style.width = opponentGameState.hp + '%';
+
+    document.getElementById('my-hand-count-text').innerText = myGameState.hand.length;
+    document.getElementById('opponent-hand-count-text').innerText = opponentGameState.cardCount;
+
+    renderHand();
+    updateButtons();
+  }
+
+  function renderHand() {
+    const handEl = document.getElementById('my-hand');
+    handEl.innerHTML = '';
+
+    myGameState.hand.forEach((card, idx) => {
+      const cardEl = document.createElement('div');
+      const isSelected = selectedCardIndices.includes(idx);
+      const typeClass = card.typeTag || card.subType;
+
+      let icon = '⚔';
+      if (card.subType === 'DEFENSE') icon = '🛡';
+      if (typeClass === 'ULTIMATE-ATK') icon = '💥';
+      if (typeClass === 'ULTIMATE-DEF') icon = '❇';
+
+      cardEl.className = `card-item ${typeClass} ${isSelected ? 'selected' : ''} ${!isMyTurn ? 'disabled' : ''}`;
+      cardEl.innerHTML = `
+        <div class="card-img-wrapper">
+          <img src="${card.img}" alt="${card.name}">
+        </div>
+        <div class="card-stat-badge">
+          <span>${icon}</span>
+          <span>${card.val}</span>
+        </div>
+      `;
+      cardEl.onclick = () => toggleSelectCard(idx);
+      handEl.appendChild(cardEl);
+    });
+  }
+
+  function renderFieldSlots(slotContainerId, cards) {
+    const container = document.getElementById(slotContainerId);
+    container.innerHTML = '';
+    cards.forEach(card => {
+      const cardEl = document.createElement('div');
+      const typeClass = card.typeTag || card.subType;
+      let icon = card.subType === 'DEFENSE' ? '🛡' : '⚔';
+
+      cardEl.className = `card-item ${typeClass}`;
+      cardEl.style.cursor = 'default';
+      cardEl.innerHTML = `
+        <div class="card-img-wrapper"><img src="${card.img}"></div>
+        <div class="card-stat-badge"><span>${icon}</span><span>${card.val}</span></div>
+      `;
+      container.appendChild(cardEl);
+    });
+  }
+
+  function updateButtons() {
+    const btn = document.getElementById('btn-action');
+    btn.disabled = !isMyTurn;
+
+    if (selectedCardIndices.length > 0) {
+      btn.innerText = '카드 제출';
+      btn.classList.add('active');
+    } else {
+      btn.innerText = '턴 종료';
+      btn.classList.remove('active');
+    }
+  }
+
+  function setLog(text) {
+    document.getElementById('log-text').innerText = text;
+  }
+
+  function copyMyId() {
+    const idText = document.getElementById('my-id').innerText;
+    if (idText && idText !== '생성 중...') {
+      navigator.clipboard.writeText(idText);
+      alert('접속 ID가 클립보드에 복사되었습니다: ' + idText);
+    }
+  }
+</script>
+</body>
+</html>
