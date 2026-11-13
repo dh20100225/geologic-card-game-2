@@ -1,538 +1,2748 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>지질시대 추리 카드 대전</title>
-  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; }
-    body { background-color: #12131C; color: #fff; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 15px; }
-    
-    #lobby { background: #1E1F2C; padding: 25px; border-radius: 12px; width: 100%; max-width: 480px; text-align: center; box-shadow: 0 8px 20px rgba(0,0,0,0.5); margin-top: 40px; }
-    .input-group { margin: 15px 0; display: flex; gap: 10px; }
-    input { flex: 1; padding: 12px; border-radius: 6px; border: 1px solid #444; background: #0A0A0F; color: #fff; font-size: 16px; }
-    button { padding: 12px 20px; border: none; border-radius: 6px; background: #4F46E5; color: #fff; font-weight: bold; cursor: pointer; transition: 0.2s; }
-    button:hover { background: #3730A3; }
-    button:disabled { background: #333; cursor: not-allowed; }
-
-    #game-board { display: none; width: 100%; max-width: 900px; flex-direction: column; gap: 15px; }
-    .player-zone { background: #1E1F2C; border-radius: 12px; padding: 15px; border: 2px solid #333; }
-    
-    .status-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .hp-bar-bg { width: 60%; background: #333; height: 18px; border-radius: 9px; overflow: hidden; }
-    .hp-bar-fill { background: #EF4444; height: 100%; width: 100%; transition: width 0.3s; }
-
-    #battle-field { background: #0F1017; border: 2px dashed #374151; border-radius: 12px; height: 210px; display: flex; justify-content: center; align-items: center; gap: 20px; position: relative; }
-    .field-section { display: flex; flex-direction: column; align-items: center; gap: 5px; }
-
-    .card-list { display: flex; gap: 10px; overflow-x: auto; padding: 10px 0; min-height: 180px; }
-    
-    .card { width: 110px; height: 165px; border-radius: 8px; display: flex; flex-direction: column; justify-content: space-between; padding: 8px 6px; font-size: 11px; cursor: pointer; user-select: none; border: 2px solid #6B7280; transition: transform 0.2s; background: #2A2C3D; flex-shrink: 0; position: relative; }
-    .card:hover { transform: translateY(-5px); }
-    .card.selected { border-color: #FBBF24; transform: translateY(-8px); box-shadow: 0 0 10px #FBBF24; }
-    .card.disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; }
-
-    .card.ATTACK { border-color: #EF4444; }
-    .card.DEFENSE { border-color: #3B82F6; }
-    .card.SPECIAL { border-color: #EC4899; }
-    .card.ULTIMATE { border-color: #F59E0B; background: linear-gradient(135deg, #3B125C 0%, #1E1F2C 100%); box-shadow: 0 0 8px rgba(245, 158, 11, 0.4); }
-
-    .card-type-tag { font-size: 9px; font-weight: bold; padding: 2px 5px; border-radius: 4px; background: rgba(255,255,255,0.15); display: inline-block; text-align: center; }
-    .card-title { font-weight: bold; font-size: 11px; margin: 3px 0; word-break: keep-all; text-align: center; }
-    
-    /* 이모티콘 아이콘 영역 디자인 */
-    .card-icon { width: 100%; height: 50px; border-radius: 6px; background: rgba(0,0,0,0.25); margin: 2px 0; border: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: center; align-items: center; font-size: 28px; }
-    
-    .card-desc { font-size: 9px; color: #bbb; line-height: 1.2; text-align: center; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-    .card-val { font-size: 14px; font-weight: bold; text-align: right; color: #FFD700; }
-
-    #action-bar { display: flex; justify-content: space-between; align-items: center; background: #1E1F2C; padding: 12px 15px; border-radius: 8px; }
-    #log { background: #0A0A0F; padding: 10px; border-radius: 6px; height: 85px; overflow-y: auto; font-size: 12px; color: #D1D5DB; margin-top: 5px; width: 100%; line-height: 1.4; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>여름의 고시엔 - 일본 고교야구 시뮬레이터</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Noto Sans KR & Black Han Sans for dramatic Japanese-Korean sports broadcast typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --font-sans: 'Noto Sans KR', sans-serif;
+            --font-display: 'Black Han Sans', sans-serif;
+        }
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            font-family: var(--font-sans);
+            background: linear-gradient(135deg, #0b192c 0%, #1e3a5f 50%, #0f2942 100%);
+            color: #f8fafc;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        .font-display {
+            font-family: var(--font-display);
+            letter-spacing: 0.02em;
+        }
+        /* Custom Koshien Animations */
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 12px rgba(251, 191, 36, 0.5); }
+            50% { box-shadow: 0 0 26px rgba(245, 158, 11, 0.95); }
+        }
+        .spirit-ready {
+            animation: pulseGlow 1.3s infinite ease-in-out;
+        }
+        @keyframes bannerPop {
+            0% { transform: scale(0.5) translateY(20px); opacity: 0; }
+            60% { transform: scale(1.08) translateY(-4px); opacity: 1; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        .banner-animate {
+            animation: bannerPop 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+        }
+        .float-slow {
+            animation: floatSlow 3.5s ease-in-out infinite;
+        }
+        /* Custom scrollbar for commentary log */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 999px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.4);
+            border-radius: 999px;
+        }
+        canvas {
+            display: block;
+            touch-action: none;
+        }
+    </style>
 </head>
-<body>
+<body class="flex flex-col items-center justify-start min-h-screen">
 
-  <div id="lobby">
-    <h2>🌋 지질시대 추리 카드 대전</h2>
-    <p style="margin-top:8px; font-size: 13px; color: #9CA3AF;">화석과 힌트를 보고 시대에 맞춰 공격과 방어를 펼쳐보세요!</p>
-    <div style="margin: 15px 0; background: #0A0A0F; padding: 10px; border-radius: 6px;">
-      <span>내 접속 ID: </span><b id="my-id" style="color: #10B981;">생성 중...</b>
+    <!-- ==================== 1. START / SETUP SCREEN ==================== -->
+    <div id="setup-screen" class="w-full max-w-5xl px-4 py-6 md:py-10 flex flex-col items-center justify-center min-h-screen">
+        <!-- Hero Title Card -->
+        <div class="w-full relative overflow-hidden rounded-3xl bg-gradient-to-br from-sky-500 via-blue-700 to-indigo-950 p-6 md:p-10 shadow-2xl border border-sky-300/30 mb-6 text-center">
+            <!-- Decorative Summer Clouds & Sunbeams -->
+            <div class="absolute -top-12 -right-12 w-48 h-48 bg-amber-300/25 rounded-full blur-2xl pointer-events-none"></div>
+            <div class="absolute top-6 left-8 w-24 h-10 bg-white/15 rounded-full blur-md pointer-events-none"></div>
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-400/20 border border-amber-300/50 text-amber-200 text-xs md:text-sm font-bold mb-3">
+                <span>⚾ 제108회 전국고교야구선수권대회</span>
+                <span class="text-white/50">|</span>
+                <span>한신 고시엔 구장</span>
+            </div>
+            <h1 class="font-display text-4xl sm:text-5xl md:text-6xl text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)] tracking-tight mb-2">
+                여름의 고시엔
+            </h1>
+            <p class="text-sky-100 text-sm md:text-base max-w-2xl mx-auto font-medium">
+                청춘의 모든 것을 건 한 여름의 9이닝 드라마! 투구의 수싸움과 혼신의 풀스윙으로 고시엔 우승기를 쟁취하세요.
+            </p>
+        </div>
+
+        <!-- Configuration Grid -->
+        <div class="w-full grid grid-cols-1 lg:grid-cols-3 gap-5 mb-6">
+            <!-- Step 1: Player School Customization -->
+            <div class="bg-slate-900/85 backdrop-blur-md border border-slate-700/80 rounded-2xl p-5 shadow-xl flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center gap-2 text-amber-400 font-bold text-sm mb-3">
+                        <span class="w-6 h-6 rounded-full bg-amber-400/20 border border-amber-400 flex items-center justify-center text-xs">1</span>
+                        <span>우리 학교 설정</span>
+                    </div>
+                    <label class="block text-xs text-slate-300 font-semibold mb-1.5">학교 이름</label>
+                    <input id="school-name-input" type="text" maxlength="10" value="세이도 고교"
+                        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-600 text-white font-bold focus:outline-none focus:border-amber-400 transition mb-4"
+                        placeholder="예: 세이도 고교">
+
+                    <label class="block text-xs text-slate-300 font-semibold mb-1.5">팀 상징 컬러</label>
+                    <div id="color-picker" class="grid grid-cols-5 gap-2 mb-4">
+                        <button type="button" data-color="#2563eb" data-name="로열 블루" class="color-btn h-9 rounded-xl bg-blue-600 ring-2 ring-white scale-105 transition shadow"></button>
+                        <button type="button" data-color="#dc2626" data-name="크림슨 레드" class="color-btn h-9 rounded-xl bg-red-600 opacity-75 hover:opacity-100 transition shadow"></button>
+                        <button type="button" data-color="#059669" data-name="에메랄드 그린" class="color-btn h-9 rounded-xl bg-emerald-600 opacity-75 hover:opacity-100 transition shadow"></button>
+                        <button type="button" data-color="#ea580c" data-name="선셋 오렌지" class="color-btn h-9 rounded-xl bg-orange-600 opacity-75 hover:opacity-100 transition shadow"></button>
+                        <button type="button" data-color="#7c3aed" data-name="임페리얼 퍼플" class="color-btn h-9 rounded-xl bg-violet-600 opacity-75 hover:opacity-100 transition shadow"></button>
+                    </div>
+
+                    <label class="block text-xs text-slate-300 font-semibold mb-1.5">팀 컬러 / 육성 특성</label>
+                    <div id="archetype-picker" class="space-y-2">
+                        <button type="button" data-arch="balanced" class="arch-btn w-full text-left p-2.5 rounded-xl border border-amber-400 bg-amber-400/15 transition">
+                            <div class="font-bold text-sm text-white flex justify-between">
+                                <span>⚖️ 밸런스형 (공수 조화)</span>
+                                <span class="text-xs text-amber-300">추천</span>
+                            </div>
+                            <div class="text-xs text-slate-300 mt-0.5">안정된 제구력과 탄탄한 중심 타선의 표준 명문팀</div>
+                        </button>
+                        <button type="button" data-arch="slugger" class="arch-btn w-full text-left p-2.5 rounded-xl border border-slate-700 bg-slate-800/70 hover:border-slate-500 transition">
+                            <div class="font-bold text-sm text-white">🔥 강타선 (호쾌한 장타 군단)</div>
+                            <div class="text-xs text-slate-400 mt-0.5">타격 파워·미트 대폭 상승 / 투수 체력 소모 빠름</div>
+                        </button>
+                        <button type="button" data-arch="pitching" class="arch-btn w-full text-left p-2.5 rounded-xl border border-slate-700 bg-slate-800/70 hover:border-slate-500 transition">
+                            <div class="font-bold text-sm text-white">🛡️ 철벽 마운드 (에이스 중심)</div>
+                            <div class="text-xs text-slate-400 mt-0.5">최고 구속 +5km/h, 날카로운 변화구 / 타격 파워 소폭 감소</div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Opponent Selection -->
+            <div class="bg-slate-900/85 backdrop-blur-md border border-slate-700/80 rounded-2xl p-5 shadow-xl flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center gap-2 text-amber-400 font-bold text-sm mb-3">
+                        <span class="w-6 h-6 rounded-full bg-amber-400/20 border border-amber-400 flex items-center justify-center text-xs">2</span>
+                        <span>대전 상대 선택 (토너먼트)</span>
+                    </div>
+                    <div id="opponent-picker" class="space-y-2.5">
+                        <button type="button" data-opp="round1" class="opp-btn w-full text-left p-3 rounded-xl border border-amber-400 bg-amber-400/15 transition">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-extrabold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">고시엔 1회전</span>
+                                <span class="text-xs text-amber-300 font-bold">난이도 ★☆☆</span>
+                            </div>
+                            <div class="font-bold text-base text-white mt-1.5">메이호 학원 (명문 사립)</div>
+                            <p class="text-xs text-slate-300 mt-0.5">기초가 탄탄한 전통의 강호. 에이스 최고 구속 141km/h.</p>
+                        </button>
+
+                        <button type="button" data-opp="semifinal" class="opp-btn w-full text-left p-3 rounded-xl border border-slate-700 bg-slate-800/70 hover:border-slate-500 transition">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-extrabold px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/40">준결승전</span>
+                                <span class="text-xs text-amber-300 font-bold">난이도 ★★☆</span>
+                            </div>
+                            <div class="font-bold text-base text-white mt-1.5">오사카 토인 (오사카 대표)</div>
+                            <p class="text-xs text-slate-400 mt-0.5">전국 최강급 타선과 기동력 야구. 에이스 최고 구속 147km/h.</p>
+                        </button>
+
+                        <button type="button" data-opp="final" class="opp-btn w-full text-left p-3 rounded-xl border border-slate-700 bg-slate-800/70 hover:border-slate-500 transition">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-extrabold px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40">고시엔 결승전</span>
+                                <span class="text-xs text-amber-300 font-bold">난이도 ★★★</span>
+                            </div>
+                            <div class="font-bold text-base text-white mt-1.5">코마다이 (디펜딩 챔피언)</div>
+                            <p class="text-xs text-slate-400 mt-0.5">무패 행진의 절대 왕자. 153km/h 강속구와 압도적 클러치 능력.</p>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Game Mode & Start -->
+            <div class="bg-slate-900/85 backdrop-blur-md border border-slate-700/80 rounded-2xl p-5 shadow-xl flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center gap-2 text-amber-400 font-bold text-sm mb-3">
+                        <span class="w-6 h-6 rounded-full bg-amber-400/20 border border-amber-400 flex items-center justify-center text-xs">3</span>
+                        <span>경기 방식 선택</span>
+                    </div>
+                    <div id="mode-picker" class="space-y-3 mb-5">
+                        <button type="button" data-mode="climax" class="mode-btn w-full text-left p-3.5 rounded-xl border border-amber-400 bg-amber-400/15 transition">
+                            <div class="flex items-center justify-between">
+                                <span class="font-bold text-base text-white">⚡ 클라이맥스 모드 (7회~9회)</span>
+                                <span class="text-xs bg-amber-400 text-slate-950 font-black px-2 py-0.5 rounded-full">인기</span>
+                            </div>
+                            <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                                1점 차로 뒤진 7회초 승부처부터 시작! 짧은 시간 안에 고시엔 특유의 짜릿한 역전 드라마를 체험합니다.
+                            </p>
+                        </button>
+
+                        <button type="button" data-mode="3inning" class="mode-btn w-full text-left p-3.5 rounded-xl border border-slate-700 bg-slate-800/70 hover:border-slate-500 transition">
+                            <div class="font-bold text-base text-white">🏟️ 3이닝 단기 결전 (1회~3회)</div>
+                            <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+                                1회초 0-0 동점 상황에서 시작하여 3이닝 동안 온전한 공수 교대 전략을 겨루는 정통 단기전입니다.
+                            </p>
+                        </button>
+                    </div>
+
+                    <div class="p-3 rounded-xl bg-slate-800/90 border border-slate-700 text-xs text-slate-300 space-y-1">
+                        <div class="font-bold text-amber-300">🔊 사운드 & 조작 안내</div>
+                        <div>• 알루미늄 배트 타격음('깡!'), 브라스밴드 응원곡이 실시간 합성됩니다.</div>
+                        <div>• 투구: 구종·코스 선택 후 타이밍 바 클릭/스페이스바</div>
+                        <div>• 타격: 마우스/터치 또는 방향키(WASD)로 미트 이동 후 스윙!</div>
+                    </div>
+                </div>
+
+                <button id="start-game-btn" type="button"
+                    class="mt-5 w-full py-4 rounded-2xl bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 hover:from-amber-300 hover:to-red-400 text-slate-950 font-display text-2xl shadow-lg shadow-orange-600/30 transform active:scale-95 transition cursor-pointer flex items-center justify-center gap-2">
+                    <span>⚾ 사이렌과 함께 플레이볼!</span>
+                </button>
+            </div>
+        </div>
     </div>
-    <div class="input-group">
-      <input type="text" id="peer-id-input" placeholder="상대방 ID 입력">
-      <button onclick="connectToPeer()">연결하기</button>
+
+    <!-- ==================== 2. MAIN GAMEPLAY SCREEN ==================== -->
+    <div id="game-screen" class="hidden w-full max-w-6xl px-2 sm:px-4 py-2 sm:py-3 flex flex-col gap-2.5 min-h-screen">
+        
+        <!-- TV Broadcast Style Top HUD -->
+        <header class="w-full bg-slate-950/90 backdrop-blur-md border border-slate-700/80 rounded-2xl p-2.5 sm:p-3 shadow-xl flex flex-wrap items-center justify-between gap-2">
+            <!-- Left: Scoreboard & Inning -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <!-- Team Scores Box -->
+                <div class="rounded-xl overflow-hidden border border-slate-700 bg-slate-900 min-w-[165px] sm:min-w-[210px]">
+                    <!-- Away Team (Player - Top of Inning) -->
+                    <div class="flex items-center justify-between px-2.5 py-1 border-b border-slate-800">
+                        <div class="flex items-center gap-1.5">
+                            <span id="hud-away-color" class="w-2.5 h-4 rounded-sm bg-blue-500 inline-block"></span>
+                            <span id="hud-away-name" class="font-bold text-xs sm:text-sm text-white truncate max-w-[95px] sm:max-w-[125px]">세이도 고교</span>
+                        </div>
+                        <span id="hud-away-score" class="font-display text-base sm:text-lg text-amber-300">2</span>
+                    </div>
+                    <!-- Home Team (Opponent - Bottom of Inning) -->
+                    <div class="flex items-center justify-between px-2.5 py-1">
+                        <div class="flex items-center gap-1.5">
+                            <span id="hud-home-color" class="w-2.5 h-4 rounded-sm bg-rose-600 inline-block"></span>
+                            <span id="hud-home-name" class="font-bold text-xs sm:text-sm text-slate-200 truncate max-w-[95px] sm:max-w-[125px]">메이호 학원</span>
+                        </div>
+                        <span id="hud-home-score" class="font-display text-base sm:text-lg text-white">3</span>
+                    </div>
+                </div>
+
+                <!-- Inning & Base Diamond Widget -->
+                <div class="flex items-center gap-2.5 bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5">
+                    <div class="text-center">
+                        <div id="hud-inning" class="font-display text-base sm:text-lg text-amber-400 leading-tight">7회초</div>
+                        <div id="hud-half-badge" class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-sky-500/20 text-sky-300">공격</div>
+                    </div>
+
+                    <!-- SVG Mini Base Diamond -->
+                    <svg class="w-11 h-11 sm:w-12 sm:h-12" viewBox="0 0 60 60">
+                        <!-- 2nd Base -->
+                        <rect id="base-2-ind" x="24" y="6" width="12" height="12" rx="2" transform="rotate(45 30 12)" fill="#1e293b" stroke="#64748b" stroke-width="2"/>
+                        <!-- 3rd Base -->
+                        <rect id="base-3-ind" x="8" y="22" width="12" height="12" rx="2" transform="rotate(45 14 28)" fill="#1e293b" stroke="#64748b" stroke-width="2"/>
+                        <!-- 1st Base -->
+                        <rect id="base-1-ind" x="40" y="22" width="12" height="12" rx="2" transform="rotate(45 46 28)" fill="#1e293b" stroke="#64748b" stroke-width="2"/>
+                        <!-- Home Plate -->
+                        <polygon points="30,52 24,46 24,41 36,41 36,46" fill="#94a3b8"/>
+                    </svg>
+
+                    <!-- B-S-O Lights -->
+                    <div class="space-y-1 text-[11px] font-black">
+                        <div class="flex items-center gap-1">
+                            <span class="w-3 text-emerald-400">B</span>
+                            <span id="b-dot-1" class="w-2.5 h-2.5 rounded-full bg-slate-800 border border-slate-600"></span>
+                            <span id="b-dot-2" class="w-2.5 h-2.5 rounded-full bg-slate-800 border border-slate-600"></span>
+                            <span id="b-dot-3" class="w-2.5 h-2.5 rounded-full bg-slate-800 border border-slate-600"></span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <span class="w-3 text-amber-400">S</span>
+                            <span id="s-dot-1" class="w-2.5 h-2.5 rounded-full bg-slate-800 border border-slate-600"></span>
+                            <span id="s-dot-2" class="w-2.5 h-2.5 rounded-full bg-slate-800 border border-slate-600"></span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <span class="w-3 text-rose-500">O</span>
+                            <span id="o-dot-1" class="w-2.5 h-2.5 rounded-full bg-slate-800 border border-slate-600"></span>
+                            <span id="o-dot-2" class="w-2.5 h-2.5 rounded-full bg-slate-800 border border-slate-600"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center: Pitch Speed & Last Play Radar -->
+            <div class="hidden md:flex items-center gap-3 bg-slate-900/90 border border-slate-700/80 rounded-xl px-3.5 py-2">
+                <div class="text-center border-r border-slate-700 pr-3">
+                    <div class="text-[10px] text-slate-400 font-bold">직전 투구 구속</div>
+                    <div id="hud-pitch-speed" class="font-display text-xl text-cyan-300">--- km/h</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-[10px] text-slate-400 font-bold">구종 / 판정</div>
+                    <div id="hud-pitch-info" class="text-xs font-bold text-white mt-0.5">대기 중</div>
+                </div>
+            </div>
+
+            <!-- Right: Spirit Gauge, Stamina & Sound Controls -->
+            <div class="flex items-center gap-2 ml-auto sm:ml-0">
+                <!-- Fighting Spirit (투혼 게이지) -->
+                <div class="bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-1.5 min-w-[115px] sm:min-w-[140px]">
+                    <div class="flex items-center justify-between text-[11px] font-bold mb-1">
+                        <span class="text-amber-400">🔥 투혼 게이지</span>
+                        <span id="hud-spirit-text" class="text-white">40%</span>
+                    </div>
+                    <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                        <div id="hud-spirit-bar" class="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 transition-all duration-300" style="width: 40%"></div>
+                    </div>
+                </div>
+
+                <!-- Sound Toggle -->
+                <button id="mute-btn" type="button" title="사운드 켜기/끄기"
+                    class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white transition cursor-pointer">
+                    <span id="mute-icon" class="text-base">🔊</span>
+                </button>
+
+                <!-- Line Score Modal Toggle -->
+                <button id="linescore-btn" type="button" title="이닝별 스코어보드"
+                    class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs font-bold text-amber-300 transition cursor-pointer">
+                    📊 기록
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Stadium Canvas Viewport -->
+        <div class="relative w-full rounded-2xl overflow-hidden border-2 border-slate-700/90 shadow-2xl bg-sky-400" style="aspect-ratio: 16 / 9; max-height: 54vh;">
+            <canvas id="stadium-canvas" class="w-full h-full"></canvas>
+
+            <!-- Floating Mobile Pitch Speed Pill -->
+            <div id="mobile-speed-pill" class="md:hidden absolute top-2.5 left-2.5 bg-slate-950/80 backdrop-blur px-2.5 py-1 rounded-lg border border-slate-700 text-xs font-bold text-cyan-300">
+                구속: <span id="mobile-speed-val">---</span>
+            </div>
+
+            <!-- Dramatic Center Event Banner (Inning Change, Home Run, Strikeout, etc.) -->
+            <div id="event-banner" class="hidden pointer-events-none absolute inset-0 flex items-center justify-center z-20 px-4">
+                <div id="event-banner-card" class="banner-animate bg-slate-950/90 backdrop-blur-md border-2 border-amber-400 rounded-2xl px-6 py-4 text-center shadow-2xl max-w-md">
+                    <div id="event-banner-sub" class="text-xs font-extrabold tracking-widest text-amber-300 uppercase mb-1">INNING CHANGE</div>
+                    <div id="event-banner-title" class="font-display text-2xl sm:text-4xl text-white drop-shadow">7회초 공격 시작!</div>
+                    <div id="event-banner-desc" class="text-xs sm:text-sm text-slate-300 mt-1">세이도 고교의 반격이 시작됩니다.</div>
+                </div>
+            </div>
+
+            <!-- Pitching Timing Gauge Overlay (Shown during Pitching Phase) -->
+            <div id="pitch-timing-overlay" class="hidden absolute bottom-3 left-1/2 -translate-x-1/2 w-[90%] max-w-md bg-slate-950/90 backdrop-blur-md border border-amber-400/70 rounded-2xl p-3 shadow-2xl z-10">
+                <div class="flex justify-between items-center text-xs font-bold mb-1.5">
+                    <span class="text-amber-300">🎯 릴리스 타이밍!</span>
+                    <span class="text-slate-300">노란 구역에서 클릭 / 스페이스바</span>
+                </div>
+                <div class="relative w-full h-6 bg-slate-800 rounded-full overflow-hidden border border-slate-600">
+                    <!-- Good Zone -->
+                    <div class="absolute top-0 bottom-0 left-[62%] w-[24%] bg-emerald-500/40"></div>
+                    <!-- Perfect Sweet Spot -->
+                    <div class="absolute top-0 bottom-0 left-[70%] w-[8%] bg-amber-400 shadow-[0_0_10px_#fbbf24]"></div>
+                    <!-- Moving Needle -->
+                    <div id="timing-needle" class="absolute top-0 bottom-0 w-1.5 bg-white shadow-[0_0_8px_#fff]" style="left: 0%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Control Deck & Play-by-Play Commentary -->
+        <div class="w-full grid grid-cols-1 lg:grid-cols-12 gap-2.5 flex-1">
+            
+            <!-- Left/Main Controls Panel (7 cols on lg) -->
+            <div class="lg:col-span-7 bg-slate-900/90 backdrop-blur-md border border-slate-700/80 rounded-2xl p-3 sm:p-4 shadow-xl flex flex-col justify-between">
+                
+                <!-- BATTING CONTROLS (Visible when Player is Batting) -->
+                <div id="batting-controls" class="space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-1 rounded-lg bg-sky-500/20 border border-sky-400/40 text-sky-300 text-xs font-extrabold">⚾ 공격 작전</span>
+                            <span id="batter-info-text" class="text-xs sm:text-sm font-bold text-white">4번 타자 유우키 (타율 .365 / 홈런 14)</span>
+                        </div>
+                        <!-- Spirit Special Button: Clutch Focus -->
+                        <button id="bat-spirit-btn" type="button" disabled
+                            class="px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-600 text-slate-400 text-xs font-extrabold transition flex items-center gap-1.5">
+                            <span>⚡ 클러치 집중 (투혼 100%)</span>
+                        </button>
+                    </div>
+
+                    <!-- Swing Mode & Base Steal Row -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <button type="button" data-swingmode="contact" class="swing-mode-btn py-2.5 px-2 rounded-xl border-2 border-amber-400 bg-amber-400/20 text-white font-bold text-xs sm:text-sm transition cursor-pointer">
+                            🎯 컨택 타격
+                            <div class="text-[10px] text-amber-200 font-normal">넓은 미트·안타 위주</div>
+                        </button>
+                        <button type="button" data-swingmode="power" class="swing-mode-btn py-2.5 px-2 rounded-xl border border-slate-700 bg-slate-800/80 text-slate-300 hover:border-slate-500 font-bold text-xs sm:text-sm transition cursor-pointer">
+                            💥 강진 (풀스윙)
+                            <div class="text-[10px] text-slate-400 font-normal">장타·홈런 노림</div>
+                        </button>
+                        <button type="button" data-swingmode="bunt" class="swing-mode-btn py-2.5 px-2 rounded-xl border border-slate-700 bg-slate-800/80 text-slate-300 hover:border-slate-500 font-bold text-xs sm:text-sm transition cursor-pointer">
+                            🛡️ 희생번트/스퀴즈
+                            <div class="text-[10px] text-slate-400 font-normal">주자 진루 작전</div>
+                        </button>
+                        <button id="steal-btn" type="button" class="py-2.5 px-2 rounded-xl border border-slate-700 bg-slate-800/80 text-slate-300 hover:border-emerald-400 font-bold text-xs sm:text-sm transition cursor-pointer">
+                            🏃 도루 시도
+                            <div id="steal-status" class="text-[10px] text-slate-400 font-normal">주자 있을 시 활성</div>
+                        </button>
+                    </div>
+
+                    <!-- Primary Action Buttons: Wait for Pitch / Swing! -->
+                    <div class="grid grid-cols-3 gap-2.5 pt-1">
+                        <button id="request-pitch-btn" type="button"
+                            class="col-span-1 py-3.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs sm:text-sm shadow-lg transition cursor-pointer active:scale-95">
+                            👀 투구 기다리기
+                        </button>
+                        <button id="swing-btn" type="button"
+                            class="col-span-2 py-3.5 rounded-xl bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 hover:from-amber-300 hover:to-rose-400 text-slate-950 font-display text-lg sm:text-xl shadow-lg shadow-orange-600/25 transition cursor-pointer active:scale-95">
+                            🏏 스윙! (클릭 / SPACE)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- PITCHING CONTROLS (Visible when Player is Pitching) -->
+                <div id="pitching-controls" class="hidden space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-1 rounded-lg bg-rose-500/20 border border-rose-400/40 text-rose-300 text-xs font-extrabold">🔥 수비 투구</span>
+                            <span id="pitcher-name-text" class="text-xs sm:text-sm font-bold text-white">에이스 사와무라</span>
+                            <div class="flex items-center gap-1 text-xs">
+                                <span class="text-slate-400">체력:</span>
+                                <div class="w-16 h-2 bg-slate-800 rounded-full overflow-hidden">
+                                    <div id="pitcher-stamina-bar" class="h-full bg-emerald-400 transition-all" style="width: 100%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-1.5">
+                            <!-- Relief Pitcher Button -->
+                            <button id="relieve-pitcher-btn" type="button"
+                                class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-cyan-300 text-xs font-bold transition cursor-pointer">
+                                🔄 투수 교대
+                            </button>
+                            <!-- Spirit Special Button: Fireball -->
+                            <button id="pitch-spirit-btn" type="button" disabled
+                                class="px-2.5 py-1.5 rounded-xl bg-slate-800 border border-slate-600 text-slate-400 text-xs font-extrabold transition">
+                                🔥 불꽃 직구 (100%)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Pitch Type Selection -->
+                    <div class="grid grid-cols-4 gap-2">
+                        <button type="button" data-pitch="fastball" class="pitch-type-btn py-2 px-1.5 rounded-xl border-2 border-amber-400 bg-amber-400/20 text-white font-bold text-xs sm:text-sm transition cursor-pointer">
+                            포심 직구
+                            <div class="text-[10px] text-amber-200 font-normal">빠른 구속·묵직함</div>
+                        </button>
+                        <button type="button" data-pitch="slider" class="pitch-type-btn py-2 px-1.5 rounded-xl border border-slate-700 bg-slate-800/80 text-slate-300 hover:border-slate-500 font-bold text-xs sm:text-sm transition cursor-pointer">
+                            슬라이더
+                            <div class="text-[10px] text-slate-400 font-normal">날카로운 횡변화</div>
+                        </button>
+                        <button type="button" data-pitch="curve" class="pitch-type-btn py-2 px-1.5 rounded-xl border border-slate-700 bg-slate-800/80 text-slate-300 hover:border-slate-500 font-bold text-xs sm:text-sm transition cursor-pointer">
+                            커브
+                            <div class="text-[10px] text-slate-400 font-normal">큰 낙폭·타이밍 교란</div>
+                        </button>
+                        <button type="button" data-pitch="fork" class="pitch-type-btn py-2 px-1.5 rounded-xl border border-slate-700 bg-slate-800/80 text-slate-300 hover:border-slate-500 font-bold text-xs sm:text-sm transition cursor-pointer">
+                            포크볼
+                            <div class="text-[10px] text-slate-400 font-normal">타자 앞 급강하</div>
+                        </button>
+                    </div>
+
+                    <!-- Pitch Throw Button -->
+                    <button id="throw-pitch-btn" type="button"
+                        class="w-full py-3.5 rounded-xl bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-600 hover:from-cyan-300 hover:to-indigo-500 text-white font-display text-lg sm:text-xl shadow-lg shadow-blue-600/25 transition cursor-pointer active:scale-95">
+                        ⚾ 코스 선택 후 와인드업! (SPACE)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right: Play-by-Play Broadcast Log (5 cols on lg) -->
+            <div class="lg:col-span-5 bg-slate-950/90 backdrop-blur-md border border-slate-700/80 rounded-2xl p-3 sm:p-4 shadow-xl flex flex-col justify-between max-h-[210px] lg:max-h-none">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-2 mb-2">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+                        <span class="text-xs font-extrabold text-amber-300 tracking-wide">고시엔 실시간 문자 중계</span>
+                    </div>
+                    <span id="crowd-mood-badge" class="text-[11px] font-bold text-slate-400">🎺 알프스 스탠드 열광 중</span>
+                </div>
+                <div id="commentary-log" class="flex-1 overflow-y-auto space-y-1.5 pr-1 text-xs sm:text-sm">
+                    <!-- Log messages injected dynamically -->
+                </div>
+            </div>
+        </div>
     </div>
-    <p id="status-msg" style="color: #FBBF24; font-size: 13px;"></p>
-  </div>
 
-  <div id="game-board">
-    <div class="player-zone" id="opponent-zone">
-      <div class="status-bar">
-        <h3>상대 플레이어 (<span id="opponent-role">-</span>)</h3>
-        <div>HP: <span id="opponent-hp">100</span>/100</div>
-      </div>
-      <div class="hp-bar-bg"><div class="hp-bar-fill" id="opponent-hp-bar"></div></div>
-      <div style="margin-top: 5px; font-size: 12px; color: #9CA3AF;">남은 카드: <span id="opponent-card-count">6</span>장</div>
+    <!-- ==================== 3. LINE SCORE / STATS MODAL ==================== -->
+    <div id="linescore-modal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-xl w-full p-5 shadow-2xl">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-display text-xl text-amber-400">📊 고시엔 전광판 & 경기 기록</h3>
+                <button id="close-linescore-btn" type="button" class="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-sm font-bold text-white cursor-pointer">닫기</button>
+            </div>
+            <div class="overflow-x-auto mb-4">
+                <table class="w-full text-center text-xs sm:text-sm border-collapse">
+                    <thead>
+                        <tr id="linescore-header" class="bg-slate-800 text-slate-300 border-b border-slate-700">
+                            <th class="py-2 px-2 text-left">학교명</th>
+                            <!-- Innings populated dynamically -->
+                            <th class="py-2 px-2 font-black text-amber-300">R</th>
+                            <th class="py-2 px-2 font-black">H</th>
+                        </tr>
+                    </thead>
+                    <tbody id="linescore-body" class="divide-y divide-slate-800 font-bold">
+                    </tbody>
+                </table>
+            </div>
+            <div id="modal-player-stats" class="grid grid-cols-3 gap-2 text-center bg-slate-800/70 rounded-xl p-3 text-xs">
+                <div>
+                    <div class="text-slate-400">팀 안타 / 홈런</div>
+                    <div id="stat-hits-hr" class="font-bold text-white text-sm mt-0.5">0안타 / 0홈런</div>
+                </div>
+                <div>
+                    <div class="text-slate-400">탈삼진</div>
+                    <div id="stat-so" class="font-bold text-cyan-300 text-sm mt-0.5">0개</div>
+                </div>
+                <div>
+                    <div class="text-slate-400">최고 구속</div>
+                    <div id="stat-max-speed" class="font-bold text-amber-300 text-sm mt-0.5">--- km/h</div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div id="battle-field">
-      <div class="field-section">
-        <span style="font-size: 11px; color: #EF4444; font-weight: bold;">공격 카드</span>
-        <div id="attack-cards-slot" style="display:flex; gap:5px;"></div>
-      </div>
-      <div style="font-size: 20px; font-weight: bold; color: #4B5563;">VS</div>
-      <div class="field-section">
-        <span style="font-size: 11px; color: #3B82F6; font-weight: bold;">방어 카드</span>
-        <div id="defense-cards-slot" style="display:flex; gap:5px;"></div>
-      </div>
+    <!-- ==================== 4. ENDING CEREMONY SCREEN ==================== -->
+    <div id="ending-screen" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+        <div id="ending-card" class="max-w-lg w-full rounded-3xl p-6 sm:p-8 border-2 shadow-2xl text-center relative overflow-hidden">
+            <!-- Dynamic Victory or Defeat Visual Header -->
+            <div id="ending-badge" class="inline-block px-4 py-1 rounded-full text-xs font-black tracking-wider mb-3"></div>
+            <div id="ending-emoji" class="text-6xl mb-3 float-slow">🏆</div>
+            <h2 id="ending-title" class="font-display text-3xl sm:text-4xl text-white mb-2"></h2>
+            <p id="ending-subtitle" class="text-sm text-slate-200 leading-relaxed mb-5"></p>
+
+            <!-- Final Score Summary -->
+            <div class="bg-slate-950/70 border border-white/15 rounded-2xl p-4 mb-5">
+                <div class="flex items-center justify-around">
+                    <div class="text-center">
+                        <div id="end-away-name" class="text-xs font-bold text-slate-300">세이도 고교</div>
+                        <div id="end-away-score" class="font-display text-4xl text-amber-400 mt-1">5</div>
+                    </div>
+                    <div class="font-display text-xl text-slate-500">VS</div>
+                    <div class="text-center">
+                        <div id="end-home-name" class="text-xs font-bold text-slate-300">코마다이</div>
+                        <div id="end-home-score" class="font-display text-4xl text-white mt-1">4</div>
+                    </div>
+                </div>
+                <div class="border-t border-white/10 mt-3 pt-3 grid grid-cols-3 gap-2 text-xs">
+                    <div>
+                        <span class="text-slate-400 block">오늘의 MVP</span>
+                        <span id="end-mvp" class="font-bold text-amber-300">에이스 사와무라</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block">타격 기록</span>
+                        <span id="end-bat-summary" class="font-bold text-white">6안타 1홈런</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block">투구 기록</span>
+                        <span id="end-pitch-summary" class="font-bold text-cyan-300">5탈삼진 / 149km</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button id="rematch-btn" type="button"
+                    class="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-display text-lg shadow-lg transition cursor-pointer">
+                    🔥 리벤지 매치 (다시 도전)
+                </button>
+                <button id="back-to-menu-btn" type="button"
+                    class="py-3.5 px-5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white font-bold text-sm transition cursor-pointer">
+                    학교 설정으로
+                </button>
+            </div>
+        </div>
     </div>
 
-    <div class="player-zone" id="my-zone">
-      <div class="status-bar">
-        <h3>나 (<span id="my-role">-</span>)</h3>
-        <div>HP: <span id="my-hp">100</span>/100</div>
-      </div>
-      <div class="hp-bar-bg"><div class="hp-bar-fill" id="my-hp-bar"></div></div>
-      
-      <p style="margin: 8px 0 4px 0; font-size: 13px; font-weight: bold;">내 손패 (<span id="my-card-count">0</span>/10)</p>
-      <div class="card-list" id="my-hand"></div>
-    </div>
+    <!-- ==================== JAVASCRIPT ENGINE ==================== -->
+    <script>
+        /**
+         * ============================================================================
+         * 1. WEB AUDIO API SOUND SYNTHESIZER (NO EXTERNAL AUDIO FILES REQUIRED)
+         * ============================================================================
+         * Synthesizes authentic Japanese High School Baseball audio:
+         * - Aluminum bat metallic ping ("깡!")
+         * - Catcher's mitt leather pop ("퍽!")
+         * - Koshien Stadium start/end siren
+         * - Brass band cheering melody (Alps stand trumpet/trombone ensemble)
+         * - Crowd cheer swell
+         */
+        class KoshienAudioEngine {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+                this.brassTimer = null;
+            }
 
-    <div id="action-bar">
-      <span id="turn-indicator" style="font-weight: bold; color: #FBBF24; font-size: 13px;">대기 중...</span>
-      <div>
-        <button id="btn-submit" onclick="submitSelectedCards()" disabled>카드 제출</button>
-        <button id="btn-draw" onclick="passAndDraw()" disabled style="background:#4B5563;">드로우 & Pass</button>
-      </div>
-    </div>
-    <div id="log"></div>
-  </div>
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioCtx();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
 
-<script>
-  const CARD_DATABASE = {
-    ATTACK: [
-      { name: '스트로마톨라이트', era: '선캄브리아', val: 18, desc: '바다 속 최초 생명체 흔적', icon: '🪨' },
-      { name: '에디아카라 동물군', era: '선캄브리아', val: 20, desc: '최초의 다세포 생물군', icon: '🪸' },
-      { name: '남세균 대증식', era: '선캄브리아', val: 22, desc: '산소 농도를 급격히 증가시킴', icon: '🦠' },
-      { name: '삼엽충 습격', era: '고생대', val: 24, desc: '바다 속을 누비는 대표 무척추동물', icon: '🦂' },
-      { name: '갑주어 돌진', era: '고생대', val: 26, desc: '단단한 골격 투구를 쓴 어류', icon: '🐟' },
-      { name: '양치식물 무성', era: '고생대', val: 25, desc: '육상에 거대한 삼림을 이룸', icon: '🌿' },
-      { name: '공룡 포효', era: '중생대', val: 28, desc: '육상을 완전히 지배한 파충류', icon: '🦖' },
-      { name: '암모나이트', era: '중생대', val: 23, desc: '바다 속을 지배한 나선형 화석', icon: '🐚' },
-      { name: '시조새 비상', era: '중생대', val: 27, desc: '파충류와 조류의 특징을 가짐', icon: '🦅' },
-      { name: '매머드 돌진', era: '신생대', val: 27, desc: '빙하기 환경에 적응한 대형 포유류', icon: '🐘' },
-      { name: '화패석 분출', era: '신생대', val: 22, desc: '동전 모양의 대형 유공충 화석', icon: '🪙' },
-      { name: '인류의 조상', era: '신생대', val: 29, desc: '제4기에 최초로 출현', icon: '🧍' }
-    ],
-    DEFENSE: [
-      { name: '최초의 오존층', era: '선캄브리아', val: 18, desc: '자외선 차단의 첫 기틀 마련', icon: '🛡️' },
-      { name: '바다 속 생명 지대', era: '선캄브리아', val: 16, desc: '자외선을 피해 바다에서 방어', icon: '🌊' },
-      { name: '온난 환경', era: '선캄브리아', val: 15, desc: '전반적으로 따뜻했던 환경', icon: '☀️' },
-      { name: '필석의 장막', era: '고생대', val: 22, desc: '바다 속 부유 생물의 방어선', icon: '🪨' },
-      { name: '방추충 장벽', era: '고생대', val: 23, desc: '고생대 말 바다의 대표 화석', icon: '🧱' },
-      { name: '오존층 차단막', era: '고생대', val: 25, desc: '육상 생물이 출현할 수 있게 됨', icon: '🌌' },
-      { name: '겉씨식물 숲', era: '중생대', val: 22, desc: '소나무, 은행나무의 무성한 삼림', icon: '🌲' },
-      { name: '파충류의 번성', era: '중생대', val: 26, desc: '온난 건조한 환경 속 방어망', icon: '🐊' },
-      { name: '대륙 분리', era: '중생대', val: 24, desc: '판게아가 분리되며 해양 확장', icon: '🗺️' },
-      { name: '속씨식물 장막', era: '신생대', val: 23, desc: '단풍나무, 밤나무 등의 번성', icon: '🍁' },
-      { name: '포유류 대번성', era: '신생대', val: 25, desc: '다양한 환경에 적응한 포유류', icon: '🐺' },
-      { name: '산맥 형성', era: '신생대', val: 28, desc: '알프스, 히말라야 산맥 솟아오름', icon: '🏔️' }
-    ],
-    SPECIAL: [
-      { name: '빙하기', era: ['고생대', '신생대'], val: 0, targetRole: 'ATTACKER', desc: '공격 전용(고생대/신생대): 상대 턴 스킵', icon: '❄️' },
-      { name: '운석 충돌', era: ['중생대'], val: 40, targetRole: 'ATTACKER', desc: '공격 전용(중생대): 확정 40 피해', icon: '☄️' },
-      { name: '판게아 형성', era: ['고생대'], val: 0, targetRole: 'DEFENDER', desc: '방어 전용(고생대): 피해 반사', icon: '🌍' }
-    ],
-    ULTIMATE: [
-      { name: '대멸종', era: '전시대', val: 50, targetRole: 'ATTACKER', desc: '★궁극기(공격): 방어 무관 확정 50 피해', icon: '💥' },
-      { name: '새로운 시대', era: '전시대', val: 50, targetRole: 'DEFENDER', desc: '★궁극기(방어): 확정 방어 50 제공', icon: '✨' }
-    ]
-  };
+            toggleMute() {
+                this.muted = !this.muted;
+                if (this.muted) this.stopBrassBand();
+                return this.muted;
+            }
 
-  let peer, conn;
-  let isHost = false;
-  let myRole = ''; 
-  let isMyTurn = false;
+            // Iconic Aluminum Bat Metallic "KKANG!" Sound
+            playBatPing(powerRatio = 1.0) {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
 
-  let myGameState = { hp: 100, hand: [] };
-  let opponentGameState = { hp: 100, cardCount: 6 };
-  
-  let selectedCardIndices = [];
-  let currentAttackCards = [];
+                // Crisp impact click
+                const clickOsc = this.ctx.createOscillator();
+                const clickGain = this.ctx.createGain();
+                clickOsc.type = 'triangle';
+                clickOsc.frequency.setValueAtTime(320, now);
+                clickOsc.frequency.exponentialRampToValueAtTime(90, now + 0.06);
+                clickGain.gain.setValueAtTime(0.6 * powerRatio, now);
+                clickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+                clickOsc.connect(clickGain).connect(this.ctx.destination);
+                clickOsc.start(now);
+                clickOsc.stop(now + 0.07);
 
-  peer = new Peer();
-  peer.on('open', (id) => { document.getElementById('my-id').innerText = id; });
-  peer.on('connection', (connection) => { conn = connection; isHost = true; setupConnection(); });
+                // High-pitched metallic aluminum ring overtones
+                const partials = [1680, 2490, 3820];
+                partials.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now);
+                    const amp = (0.35 / (idx + 1)) * Math.min(1.3, powerRatio);
+                    gain.gain.setValueAtTime(amp, now);
+                    gain.gain.exponentialRampToValueAtTime(0.0008, now + 0.45 - idx * 0.08);
+                    osc.connect(gain).connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.46);
+                });
+            }
 
-  function connectToPeer() {
-    const peerId = document.getElementById('peer-id-input').value.trim();
-    if (!peerId) return alert('상대방 ID를 입력하세요!');
-    conn = peer.connect(peerId);
-    isHost = false;
-    setupConnection();
-  }
+            // Catcher Mitt Leather Pop
+            playMittPop(speedRatio = 1.0) {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
 
-  function setupConnection() {
-    document.getElementById('status-msg').innerText = '연결 중...';
-    conn.on('open', () => {
-      document.getElementById('lobby').style.display = 'none';
-      document.getElementById('game-board').style.display = 'flex';
-      addLog('상대방과 연결되었습니다!');
-      
-      if (isHost) {
-        const coinFlip = Math.random() < 0.5;
-        initGame(coinFlip ? 'ATTACKER' : 'DEFENDER');
-        conn.send({ type: 'INIT', role: coinFlip ? 'DEFENDER' : 'ATTACKER' });
-      }
-    });
-    conn.on('data', (data) => handleData(data));
-  }
+                // Low thump
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(175 * speedRatio, now);
+                osc.frequency.exponentialRampToValueAtTime(48, now + 0.09);
+                gain.gain.setValueAtTime(0.55, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+                osc.connect(gain).connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.1);
 
-  function initGame(role) {
-    myRole = role;
-    myGameState.hp = 100;
-    myGameState.hand = [];
-    
-    // 초기 손패 6장 드로우 (7% 확률 궁극기 적용)
-    const initialTypes = ['ATTACK', 'ATTACK', 'ATTACK', 'DEFENSE', 'DEFENSE', 'SPECIAL'];
-    initialTypes.forEach(t => myGameState.hand.push(drawCardWithProbability(t)));
+                // Leather slap noise burst
+                this.playNoiseBurst(0.06, 1200, 0.25);
+            }
 
-    isMyTurn = (myRole === 'ATTACKER');
-    updateUI();
-    addLog(`게임 시작! 당신은 [${myRole === 'ATTACKER' ? '선공(공격자)' : '후공(방어자)'}] 입니다.`);
-  }
+            // Swing Whiff Whoosh
+            playSwingWhoosh() {
+                if (this.muted) return;
+                this.init();
+                this.playNoiseBurst(0.14, 650, 0.18);
+            }
 
-  // 7% 확률 궁극기 드로우 판정
-  function drawCardWithProbability(preferredType) {
-    const isUltimate = Math.random() < 0.07;
-    if (isUltimate) {
-      const pool = CARD_DATABASE.ULTIMATE;
-      const template = pool[Math.floor(Math.random() * pool.length)];
-      return { ...template, type: 'ULTIMATE' };
-    } else {
-      const pool = CARD_DATABASE[preferredType];
-      const template = pool[Math.floor(Math.random() * pool.length)];
-      return { ...template, type: preferredType };
-    }
-  }
+            // Koshien Stadium Air-Raid / Game Siren
+            playKoshienSiren(duration = 1.8) {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.linearRampToValueAtTime(440, now + duration * 0.45);
+                osc.frequency.setValueAtTime(440, now + duration * 0.75);
+                osc.frequency.linearRampToValueAtTime(260, now + duration);
 
-  function handleData(data) {
-    if (data.type === 'INIT') {
-      initGame(data.role);
-    } else if (data.type === 'ATTACK_SUBMIT') {
-      currentAttackCards = data.cards;
-      renderFieldCards('attack-cards-slot', currentAttackCards);
-      opponentGameState.cardCount = data.opponentHandCount;
-      addLog(`상대가 공격 카드를 제출했습니다. 알맞은 방어 카드를 선택하거나 패스하세요.`);
-      isMyTurn = true;
-      updateUI();
-    } else if (data.type === 'DEFENSE_SUBMIT') {
-      renderFieldCards('defense-cards-slot', data.cards);
-      opponentGameState.cardCount = data.opponentHandCount;
-      resolveBattle(currentAttackCards, data.cards);
-    } else if (data.type === 'PASS_DRAW') {
-      opponentGameState.cardCount = data.opponentHandCount;
-      if (data.role === 'ATTACKER') {
-        addLog('공격자가 카드를 내지 않고 1장을 드로우했습니다.');
-        switchRoles(false);
-      } else {
-        addLog('방어자가 카드를 내지 않고 1장을 드로우했습니다.');
-        resolveBattle(currentAttackCards, []);
-      }
-    }
-  }
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.value = 950;
 
-  function toggleSelectCard(index) {
-    if (!isMyTurn) return;
-    const card = myGameState.hand[index];
+                gain.gain.setValueAtTime(0.01, now);
+                gain.gain.linearRampToValueAtTime(0.18, now + 0.3);
+                gain.gain.setValueAtTime(0.18, now + duration - 0.35);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
-    if (myRole === 'ATTACKER') {
-      if (card.type === 'DEFENSE') return alert('공격 턴에는 방어 카드를 쓸 수 없습니다!');
-      if (card.type === 'SPECIAL' && card.targetRole === 'DEFENDER') return alert('판게아 형성 카드는 방어 시에만 사용 가능합니다!');
-      if (card.type === 'ULTIMATE' && card.targetRole === 'DEFENDER') return alert('새로운 시대(방어 궁극기) 카드는 방어 시에만 사용 가능합니다!');
-    }
-    if (myRole === 'DEFENDER') {
-      if (card.type === 'ATTACK') return alert('방어 턴에는 공격 카드를 쓸 수 없습니다!');
-      if (card.type === 'SPECIAL' && card.targetRole === 'ATTACKER') return alert('빙하기/운석 충돌 카드는 공격 시에만 사용 가능합니다!');
-      if (card.type === 'ULTIMATE' && card.targetRole === 'ATTACKER') return alert('대멸종(공격 궁극기) 카드는 공격 시에만 사용 가능합니다!');
-    }
+                osc.connect(filter).connect(gain).connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + duration);
+            }
 
-    const selIndex = selectedCardIndices.indexOf(index);
-    if (selIndex > -1) {
-      selectedCardIndices.splice(selIndex, 1);
-    } else {
-      if (selectedCardIndices.length >= 2) return alert('최대 2장까지만 선택 가능합니다.');
-      
-      const currentSelectedCards = selectedCardIndices.map(i => myGameState.hand[i]);
-      const newPotentialSelection = [...currentSelectedCards, card];
-      
-      const specialCard = newPotentialSelection.find(c => c.type === 'SPECIAL');
-      const normalCard = newPotentialSelection.find(c => c.type === 'ATTACK' || c.type === 'DEFENSE');
+            // Crowd Roar / Cheer Swell
+            playCrowdCheer(duration = 1.6, intensity = 0.25) {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const bufferSize = Math.floor(this.ctx.sampleRate * duration);
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = (Math.random() * 2 - 1) * 0.8;
+                }
 
-      if (specialCard && normalCard) {
-        if (!specialCard.era.includes(normalCard.era)) {
-          return alert(`[시대 불일치] '${specialCard.name}' 특수 카드는 [${specialCard.era.join(', ')}] 시대 카드하고만 조합하여 사용할 수 있습니다!`);
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = buffer;
+
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(850, now);
+                filter.Q.value = 0.7;
+
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime(0.01, now);
+                gain.gain.linearRampToValueAtTime(intensity, now + 0.25);
+                gain.gain.exponentialRampToValueAtTime(0.002, now + duration);
+
+                noise.connect(filter).connect(gain).connect(this.ctx.destination);
+                noise.start(now);
+                noise.stop(now + duration);
+            }
+
+            // Japanese High School Brass Band Cheering Fanfare (Alps Stand!)
+            playBrassFanfare(type = 'hit') {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                // Classic upbeat Japanese baseball cheer riff notes (Hz)
+                const melodies = {
+                    hit: [
+                        { f: 523.25, t: 0.00, d: 0.12 }, // C5
+                        { f: 659.25, t: 0.13, d: 0.12 }, // E5
+                        { f: 783.99, t: 0.26, d: 0.16 }, // G5
+                        { f: 1046.5, t: 0.44, d: 0.35 }  // C6
+                    ],
+                    homerun: [
+                        { f: 523.25, t: 0.00, d: 0.14 },
+                        { f: 659.25, t: 0.15, d: 0.14 },
+                        { f: 783.99, t: 0.30, d: 0.14 },
+                        { f: 1046.5, t: 0.46, d: 0.22 },
+                        { f: 880.00, t: 0.70, d: 0.16 },
+                        { f: 1046.5, t: 0.88, d: 0.55 }
+                    ],
+                    strikeout: [
+                        { f: 440.00, t: 0.00, d: 0.12 },
+                        { f: 554.37, t: 0.13, d: 0.12 },
+                        { f: 659.25, t: 0.26, d: 0.28 }
+                    ]
+                };
+
+                const seq = melodies[type] || melodies.hit;
+                seq.forEach(note => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(note.f, now + note.t);
+
+                    const filter = this.ctx.createBiquadFilter();
+                    filter.type = 'lowpass';
+                    filter.frequency.value = 2100;
+
+                    gain.gain.setValueAtTime(0.001, now + note.t);
+                    gain.gain.linearRampToValueAtTime(0.14, now + note.t + 0.02);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + note.t + note.d);
+
+                    osc.connect(filter).connect(gain).connect(this.ctx.destination);
+                    osc.start(now + note.t);
+                    osc.stop(now + note.t + note.d + 0.02);
+                });
+            }
+
+            stopBrassBand() {
+                if (this.brassTimer) {
+                    clearInterval(this.brassTimer);
+                    this.brassTimer = null;
+                }
+            }
+
+            playNoiseBurst(duration, centerFreq, volume) {
+                const now = this.ctx.currentTime;
+                const bufferSize = Math.floor(this.ctx.sampleRate * duration);
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = buffer;
+
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.value = centerFreq;
+
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime(volume, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+                noise.connect(filter).connect(gain).connect(this.ctx.destination);
+                noise.start(now);
+                noise.stop(now + duration);
+            }
         }
-      }
 
-      selectedCardIndices.push(index);
-    }
-    renderHand();
-    updateButtons();
-  }
+        const audio = new KoshienAudioEngine();
 
-  function submitSelectedCards() {
-    if (selectedCardIndices.length === 0) return;
+        /**
+         * ============================================================================
+         * 2. GAME DATA, ROSTERS & STATE MANAGEMENT
+         * ============================================================================
+         */
+        const OPPONENTS = {
+            round1: {
+                id: 'round1',
+                stage: '고시엔 1회전',
+                name: '메이호 학원',
+                color: '#059669',
+                aceName: '에이스 혼다',
+                maxSpeed: 141,
+                batSkill: 0.44,
+                pitchSkill: 0.48,
+                roster: ['1번 중견수 타카하시', '2번 2루수 사토', '3번 유격수 스즈키', '4번 1루수 나카무라', '5번 우익수 이토', '6번 3루수 와타나베', '7번 좌익수 야마모토', '8번 포수 코바야시', '9번 투수 혼다']
+            },
+            semifinal: {
+                id: 'semifinal',
+                stage: '준결승전',
+                name: '오사카 토인',
+                color: '#dc2626',
+                aceName: '강속구 에이스 마츠오',
+                maxSpeed: 148,
+                batSkill: 0.58,
+                pitchSkill: 0.62,
+                roster: ['1번 좌익수 후지이', '2번 유격수 마에다', '3번 3루수 에비네', '4번 포수 마츠오', '5번 1루수 마루야마', '6번 우익수 호시코', '7번 2루수 타니구치', '8번 중견수 타무라', '9번 투수 카와하라']
+            },
+            final: {
+                id: 'final',
+                stage: '고시엔 결승전',
+                name: '코마다이',
+                color: '#7c3aed',
+                aceName: '괴물 에이스 다나카',
+                maxSpeed: 154,
+                batSkill: 0.70,
+                pitchSkill: 0.76,
+                roster: ['1번 중견수 하야시', '2번 2루수 미즈노', '3번 유격수 혼마', '4번 투수 다나카', '5번 1루수 이케다', '6번 우익수 오카다', '7번 3루수 사사키', '8번 좌익수 야마구치', '9번 포수 코야마']
+            }
+        };
 
-    selectedCardIndices.sort((a,b) => b - a);
-    const playedCards = selectedCardIndices.map(i => myGameState.hand.splice(i, 1)[0]);
-    selectedCardIndices = [];
+        const PLAYER_ROSTER = [
+            { name: '1번 중견수 쿠라모치', avg: '.342', hr: 4, speed: 95 },
+            { name: '2번 2루수 코미나토', avg: '.358', hr: 3, speed: 85 },
+            { name: '3번 좌익수 이사시키', avg: '.330', hr: 11, speed: 75 },
+            { name: '4번 1루수 유우키', avg: '.385', hr: 18, speed: 70 },
+            { name: '5번 3루수 마스코', avg: '.315', hr: 15, speed: 60 },
+            { name: '6번 포수 미유키', avg: '.362', hr: 13, speed: 72 },
+            { name: '7번 우익수 시라스', avg: '.328', hr: 6, speed: 80 },
+            { name: '8번 유격수 카네마루', avg: '.295', hr: 5, speed: 78 },
+            { name: '9번 투수 사와무라', avg: '.240', hr: 1, speed: 76 }
+        ];
 
-    if (myRole === 'ATTACKER') {
-      currentAttackCards = playedCards;
-      renderFieldCards('attack-cards-slot', currentAttackCards);
-      isMyTurn = false;
-      updateUI();
-      
-      conn.send({ type: 'ATTACK_SUBMIT', cards: playedCards, opponentHandCount: myGameState.hand.length });
-      addLog('공격 카드를 제출했습니다.');
-    } else {
-      renderFieldCards('defense-cards-slot', playedCards);
-      conn.send({ type: 'DEFENSE_SUBMIT', cards: playedCards, opponentHandCount: myGameState.hand.length });
-      resolveBattle(currentAttackCards, playedCards);
-    }
-  }
+        const gameState = {
+            // Setup choices
+            schoolName: '세이도 고교',
+            teamColor: '#2563eb',
+            archetype: 'balanced', // balanced | slugger | pitching
+            opponentKey: 'round1',
+            mode: 'climax', // climax (7-9) | 3inning (1-3)
 
-  function passAndDraw() {
-    if (!isMyTurn) return;
+            // Match progress
+            startInning: 7,
+            regEndInning: 9,
+            inning: 7,
+            isTop: true, // true = Player batting (Away), false = Player pitching (Home)
+            balls: 0,
+            strikes: 0,
+            outs: 0,
+            bases: [false, false, false], // [1B, 2B, 3B]
+            awayScore: 2,
+            homeScore: 3,
+            awayHits: 4,
+            homeHits: 5,
+            inningScores: { away: {}, home: {} },
 
-    if (myGameState.hand.length < 10) {
-      const types = ['ATTACK', 'DEFENSE', 'SPECIAL'];
-      const drawnCard = drawCardWithProbability(types[Math.floor(Math.random() * types.length)]);
-      myGameState.hand.push(drawnCard);
-      
-      if (drawnCard.type === 'ULTIMATE') {
-        addLog(`🌟 [궁극기 획득!] 7% 확률을 뚫고 궁극기 카드 [${drawnCard.name}]를 뽑았습니다!`);
-      } else {
-        addLog('카드를 1장 드로우했습니다.');
-      }
-    }
-    isMyTurn = false;
-    
-    const currentRole = myRole;
-    conn.send({ type: 'PASS_DRAW', role: currentRole, opponentHandCount: myGameState.hand.length });
+            // Lineup indices
+            playerBatterIdx: 2,
+            oppBatterIdx: 0,
 
-    if (currentRole === 'ATTACKER') {
-      switchRoles(false);
-    } else {
-      resolveBattle(currentAttackCards, []);
-    }
-  }
+            // Pitcher state
+            playerPitcherName: '에이스 사와무라',
+            pitcherRelieved: false,
+            pitcherStamina: 100,
 
-  function resolveBattle(attackCards, defenseCards) {
-    let normalAtkVal = 0;
-    let meteorDmg = 0;
-    let extinctionDmg = 0;
-    let isPangaea = false;
-    let freezeApplied = false;
+            // Fighting Spirit (투혼 게이지 0~100)
+            spirit: 40,
+            spiritActive: false,
 
-    attackCards.forEach(c => {
-      if (c.type === 'ATTACK') normalAtkVal += c.val;
-      if (c.name === '운석 충돌') meteorDmg = 40;
-      if (c.name === '대멸종') extinctionDmg = 50;
-      if (c.name === '빙하기') freezeApplied = true;
-    });
+            // Stats for MVP & summary
+            stats: {
+                hits: 0,
+                hrs: 0,
+                rbis: 0,
+                strikeouts: 0,
+                maxPitchSpeed: 0
+            },
 
-    let totalDefVal = 0;
-    let hasSpecialDefense = false;
-    let eraMatched = false;
-    let mainAtkEra = attackCards.find(c => c.type === 'ATTACK')?.era;
+            // Phase & View state
+            viewMode: 'duel', // 'duel' (batter/pitcher view) | 'field' (in-play diamond view)
+            phase: 'idle', // 'idle' | 'pitch_timing' | 'pitch_flight' | 'in_play' | 'gameover'
 
-    defenseCards.forEach(c => {
-      if (c.type === 'DEFENSE') {
-        if (mainAtkEra && c.era === mainAtkEra) {
-          totalDefVal += c.val;
-          eraMatched = true;
+            // Batting controls
+            swingMode: 'contact', // 'contact' | 'power' | 'bunt'
+            stealRequested: false,
+            cursorX: 0.5, // Normalized within strike zone box (0..1)
+            cursorY: 0.5,
+            batterSwingAnim: 0, // 0..1
+
+            // Pitching controls
+            selectedPitchType: 'fastball',
+            targetZoneX: 0.5, // Normalized within strike zone box (0..1)
+            targetZoneY: 0.5,
+            timingPos: 0,
+            timingDir: 1,
+            pitcherWindupAnim: 0,
+
+            // Active ball flight (Duel view)
+            ball: {
+                active: false,
+                progress: 0, // 0 (mound) -> 1 (home plate)
+                startX: 0.5,
+                startY: 0.35,
+                endX: 0.5,
+                endY: 0.5,
+                curveX: 0,
+                curveY: 0,
+                speedKmh: 142,
+                type: 'fastball',
+                isStrike: true,
+                isFireball: false
+            },
+
+            // In-Play Diamond Simulation
+            inPlay: {
+                timer: 0,
+                duration: 2.6,
+                ballStartX: 0.5,
+                ballStartY: 0.82,
+                ballEndX: 0.5,
+                ballEndY: 0.3,
+                maxArcHeight: 40,
+                outcomeText: '',
+                outcomeSub: '',
+                isHit: false,
+                isHR: false,
+                basesGained: 0,
+                isOut: false,
+                outType: '',
+                fielderIdx: 7,
+                runnerProgress: 0
+            }
+        };
+
+        /**
+         * ============================================================================
+         * 3. SETUP SCREEN INTERACTIONS
+         * ============================================================================
+         */
+        function initSetupUI() {
+            // Color buttons
+            document.querySelectorAll('.color-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.color-btn').forEach(b => {
+                        b.classList.remove('ring-2', 'ring-white', 'scale-105');
+                        b.classList.add('opacity-75');
+                    });
+                    btn.classList.add('ring-2', 'ring-white', 'scale-105');
+                    btn.classList.remove('opacity-75');
+                    gameState.teamColor = btn.dataset.color;
+                });
+            });
+
+            // Archetype buttons
+            document.querySelectorAll('.arch-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.arch-btn').forEach(b => {
+                        b.classList.remove('border-amber-400', 'bg-amber-400/15');
+                        b.classList.add('border-slate-700', 'bg-slate-800/70');
+                    });
+                    btn.classList.remove('border-slate-700', 'bg-slate-800/70');
+                    btn.classList.add('border-amber-400', 'bg-amber-400/15');
+                    gameState.archetype = btn.dataset.arch;
+                });
+            });
+
+            // Opponent buttons
+            document.querySelectorAll('.opp-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.opp-btn').forEach(b => {
+                        b.classList.remove('border-amber-400', 'bg-amber-400/15');
+                        b.classList.add('border-slate-700', 'bg-slate-800/70');
+                    });
+                    btn.classList.remove('border-slate-700', 'bg-slate-800/70');
+                    btn.classList.add('border-amber-400', 'bg-amber-400/15');
+                    gameState.opponentKey = btn.dataset.opp;
+                });
+            });
+
+            // Mode buttons
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.mode-btn').forEach(b => {
+                        b.classList.remove('border-amber-400', 'bg-amber-400/15');
+                        b.classList.add('border-slate-700', 'bg-slate-800/70');
+                    });
+                    btn.classList.remove('border-slate-700', 'bg-slate-800/70');
+                    btn.classList.add('border-amber-400', 'bg-amber-400/15');
+                    gameState.mode = btn.dataset.mode;
+                });
+            });
+
+            // Start Game
+            document.getElementById('start-game-btn').addEventListener('click', () => {
+                const rawName = document.getElementById('school-name-input').value.trim();
+                gameState.schoolName = rawName || '세이도 고교';
+                startMatch();
+            });
         }
-      }
-      if (c.name === '새로운 시대') {
-        totalDefVal += 50;
-        eraMatched = true;
-      }
-      if (c.type === 'SPECIAL') {
-        hasSpecialDefense = true;
-        if (c.name === '판게아 형성') isPangaea = true;
-      }
-    });
 
-    let normalDamage = 0;
+        /**
+         * ============================================================================
+         * 4. MATCH INITIALIZATION & STATE HELPERS
+         * ============================================================================
+         */
+        function startMatch() {
+            audio.init();
+            audio.playKoshienSiren(1.9);
+            audio.playCrowdCheer(2.0, 0.25);
 
-    if (attackCards.some(c => c.type === 'ATTACK')) {
-      if (hasSpecialDefense) {
-        normalDamage = Math.max(0, normalAtkVal - (defenseCards.some(c => c.name === '새로운 시대') ? 50 : 0));
-        addLog(`✨ [특수 방어] 특수 카드를 사용하여 일반 공격을 방어했습니다.`);
-      } else if (defenseCards.length === 0) {
-        normalDamage = normalAtkVal;
-        addLog(`🛡️ [방어 패스] 방어 카드를 내지 않았습니다. 일반 공격 기본 피해(${normalDamage})를 받습니다.`);
-      } else if (eraMatched) {
-        normalDamage = Math.max(0, normalAtkVal - totalDefVal);
-        addLog(`⭕ [방어 성공!] (일반 공격력 ${normalAtkVal} - 방어력 ${totalDefVal} = 피해량 ${normalDamage})`);
-      } else {
-        normalDamage = normalAtkVal * 2;
-        addLog(`❌ [시대 불일치!] 방어 실패로 일반 공격 카드 피해가 2배(${normalDamage})로 증폭됩니다.`);
-      }
-    }
+            const opp = OPPONENTS[gameState.opponentKey];
 
-    if (meteorDmg > 0) {
-      addLog(`☄️ [운석 충돌] 방어 여부와 관계없이 운석 충돌 확정 피해 ${meteorDmg}가 추가 정산됩니다.`);
-    }
+            // Reset scores & innings based on chosen mode
+            if (gameState.mode === 'climax') {
+                gameState.startInning = 7;
+                gameState.regEndInning = 9;
+                gameState.inning = 7;
+                gameState.awayScore = 2;
+                gameState.homeScore = 3;
+                gameState.awayHits = 5;
+                gameState.homeHits = 6;
+                gameState.inningScores = {
+                    away: { 1: 0, 2: 1, 3: 0, 4: 0, 5: 1, 6: 0 },
+                    home: { 1: 1, 2: 0, 3: 2, 4: 0, 5: 0, 6: 0 }
+                };
+            } else {
+                gameState.startInning = 1;
+                gameState.regEndInning = 3;
+                gameState.inning = 1;
+                gameState.awayScore = 0;
+                gameState.homeScore = 0;
+                gameState.awayHits = 0;
+                gameState.homeHits = 0;
+                gameState.inningScores = { away: {}, home: {} };
+            }
 
-    if (extinctionDmg > 0) {
-      addLog(`💥 [대멸종!] 궁극기 효과로 방어 여부와 관계없이 확정 피해 ${extinctionDmg}가 추가 정산됩니다.`);
-    }
+            gameState.isTop = true;
+            gameState.balls = 0;
+            gameState.strikes = 0;
+            gameState.outs = 0;
+            gameState.bases = [false, false, false];
+            gameState.playerBatterIdx = 2; // Start with 3rd batter for immediate excitement!
+            gameState.oppBatterIdx = 0;
+            gameState.playerPitcherName = '에이스 사와무라';
+            gameState.pitcherRelieved = false;
+            gameState.pitcherStamina = gameState.archetype === 'slugger' ? 88 : 100;
+            gameState.spirit = 45;
+            gameState.spiritActive = false;
+            gameState.stats = { hits: 0, hrs: 0, rbis: 0, strikeouts: 0, maxPitchSpeed: 0 };
+            gameState.viewMode = 'duel';
+            gameState.phase = 'idle';
+            gameState.stealRequested = false;
 
-    const finalDamage = meteorDmg + extinctionDmg + normalDamage;
+            // Switch Screens
+            document.getElementById('setup-screen').classList.add('hidden');
+            document.getElementById('ending-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
 
-    if (myRole === 'DEFENDER') {
-      myGameState.hp = Math.max(0, myGameState.hp - finalDamage);
-      if (isPangaea) {
-        opponentGameState.hp = Math.max(0, opponentGameState.hp - finalDamage);
-        addLog(`🌍 [판게아 형성] 피해 반사! 상대에게도 총 피해량(${finalDamage})을 그대로 반사했습니다.`);
-      }
-    } else {
-      opponentGameState.hp = Math.max(0, opponentGameState.hp - finalDamage);
-      if (isPangaea) {
-        myGameState.hp = Math.max(0, myGameState.hp - finalDamage);
-        addLog(`🌍 [판게아 형성] 피해 반사! 상대가 피해를 반사하여 나도 ${finalDamage}의 피해를 입었습니다.`);
-      }
-    }
+            // Clear commentary log
+            const logEl = document.getElementById('commentary-log');
+            logEl.innerHTML = '';
 
-    if (myGameState.hp <= 0 || opponentGameState.hp <= 0) {
-      setTimeout(() => {
-        if (myGameState.hp <= 0 && opponentGameState.hp <= 0) alert('무승부입니다!');
-        else if (myGameState.hp <= 0) alert('패배했습니다...');
-        else alert('🎉 승리했습니다!');
-        location.reload();
-      }, 500);
-      return;
-    }
+            addCommentary(`🎺 사이렌이 울립니다! ${opp.stage}, ${gameState.schoolName} 대 ${opp.name}의 경기가 시작됩니다!`, 'highlight');
+            if (gameState.mode === 'climax') {
+                addCommentary(`🔥 2-3으로 1점 뒤진 7회초 클라이맥스 승부처! ${gameState.schoolName}의 공격입니다.`, 'info');
+            }
 
-    setTimeout(() => {
-      clearField();
-      switchRoles(freezeApplied);
-    }, 2800);
-  }
+            resizeCanvas();
+            updateHUD();
+            showBanner(`${gameState.inning}회초 공격`, `${gameState.schoolName} 공격`, '관중석의 브라스밴드가 울려 퍼집니다!');
+        }
 
-  function switchRoles(freezeApplied) {
-    if (freezeApplied) {
-      addLog('❄️ [빙하기 발동!] 공격자의 다음 공격 턴이 얼어붙어 연속 공격 권한을 유지합니다!');
-      isMyTurn = (myRole === 'ATTACKER');
-    } else {
-      myRole = (myRole === 'ATTACKER') ? 'DEFENDER' : 'ATTACKER';
-      isMyTurn = (myRole === 'ATTACKER');
-    }
+        function addCommentary(text, tone = 'normal') {
+            const logEl = document.getElementById('commentary-log');
+            const entry = document.createElement('div');
+            const colors = {
+                normal: 'text-slate-200 bg-slate-900/70 border-slate-800',
+                highlight: 'text-amber-300 font-bold bg-amber-500/10 border-amber-500/30',
+                danger: 'text-rose-300 font-bold bg-rose-500/10 border-rose-500/30',
+                info: 'text-cyan-300 bg-cyan-500/10 border-cyan-500/30'
+            };
+            entry.className = `px-2.5 py-1.5 rounded-lg border ${colors[tone] || colors.normal} leading-snug`;
+            entry.textContent = text;
+            logEl.prepend(entry);
+        }
 
-    selectedCardIndices = [];
-    updateUI();
-    addLog(`--- 턴 교대! 현재 내 역할: [${myRole === 'ATTACKER' ? '공격자' : '방어자'}] ---`);
-  }
+        let bannerTimeout = null;
+        function showBanner(sub, title, desc, duration = 1800) {
+            const banner = document.getElementById('event-banner');
+            document.getElementById('event-banner-sub').textContent = sub;
+            document.getElementById('event-banner-title').textContent = title;
+            document.getElementById('event-banner-desc').textContent = desc;
 
-  function updateUI() {
-    document.getElementById('my-role').innerText = myRole === 'ATTACKER' ? '공격자' : '방어자';
-    document.getElementById('opponent-role').innerText = myRole === 'ATTACKER' ? '방어자' : '공격자';
+            banner.classList.remove('hidden');
+            const card = document.getElementById('event-banner-card');
+            card.classList.remove('banner-animate');
+            void card.offsetWidth; // trigger reflow
+            card.classList.add('banner-animate');
 
-    document.getElementById('my-hp').innerText = myGameState.hp;
-    document.getElementById('my-hp-bar').style.width = myGameState.hp + '%';
-    document.getElementById('opponent-hp').innerText = opponentGameState.hp;
-    document.getElementById('opponent-hp-bar').style.width = opponentGameState.hp + '%';
+            if (bannerTimeout) clearTimeout(bannerTimeout);
+            bannerTimeout = setTimeout(() => {
+                banner.classList.add('hidden');
+            }, duration);
+        }
 
-    document.getElementById('my-card-count').innerText = myGameState.hand.length;
-    document.getElementById('opponent-card-count').innerText = opponentGameState.cardCount;
+        function gainSpirit(amount) {
+            gameState.spirit = Math.min(100, Math.max(0, gameState.spirit + amount));
+            updateHUD();
+        }
 
-    document.getElementById('turn-indicator').innerText = isMyTurn 
-      ? (myRole === 'ATTACKER' ? '내 차례: 공격/특수/궁극기 카드를 선택하거나 드로우하세요.' : '내 차례: 알맞은 방어/특수/궁극기 카드를 내거나 드로우&Pass 하세요.')
-      : '상대방의 선택을 기다리는 중...';
+        function updateHUD() {
+            const opp = OPPONENTS[gameState.opponentKey];
+            document.getElementById('hud-away-name').textContent = gameState.schoolName;
+            document.getElementById('hud-away-color').style.backgroundColor = gameState.teamColor;
+            document.getElementById('hud-away-score').textContent = gameState.awayScore;
 
-    renderHand();
-    updateButtons();
-  }
+            document.getElementById('hud-home-name').textContent = opp.name;
+            document.getElementById('hud-home-color').style.backgroundColor = opp.color;
+            document.getElementById('hud-home-score').textContent = gameState.homeScore;
 
-  function renderHand() {
-    const handEl = document.getElementById('my-hand');
-    handEl.innerHTML = '';
-    myGameState.hand.forEach((card, idx) => {
-      const cardEl = document.createElement('div');
-      const isSelected = selectedCardIndices.includes(idx);
-      
-      let disabled = !isMyTurn;
-      if (myRole === 'ATTACKER') {
-        if (card.type === 'DEFENSE') disabled = true;
-        if (card.type === 'SPECIAL' && card.targetRole === 'DEFENDER') disabled = true;
-        if (card.type === 'ULTIMATE' && card.targetRole === 'DEFENDER') disabled = true;
-      }
-      if (myRole === 'DEFENDER') {
-        if (card.type === 'ATTACK') disabled = true;
-        if (card.type === 'SPECIAL' && card.targetRole === 'ATTACKER') disabled = true;
-        if (card.type === 'ULTIMATE' && card.targetRole === 'ATTACKER') disabled = true;
-      }
+            document.getElementById('hud-inning').textContent = `${gameState.inning}회${gameState.isTop ? '초' : '말'}`;
+            const halfBadge = document.getElementById('hud-half-badge');
+            if (gameState.isTop) {
+                halfBadge.textContent = '공격';
+                halfBadge.className = 'text-[10px] font-bold px-1.5 py-0.2 rounded bg-sky-500/20 text-sky-300';
+            } else {
+                halfBadge.textContent = '수비';
+                halfBadge.className = 'text-[10px] font-bold px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-300';
+            }
 
-      let typeTagText = '공격';
-      if (card.type === 'DEFENSE') typeTagText = '방어';
-      if (card.type === 'SPECIAL') typeTagText = '특수';
-      if (card.type === 'ULTIMATE') typeTagText = '★궁극기';
+            // Base indicators
+            const baseColors = ['#fbbf24', '#fbbf24', '#fbbf24'];
+            [1, 2, 3].forEach((b, idx) => {
+                const el = document.getElementById(`base-${b}-ind`);
+                if (gameState.bases[idx]) {
+                    el.setAttribute('fill', baseColors[idx]);
+                    el.setAttribute('stroke', '#ffffff');
+                } else {
+                    el.setAttribute('fill', '#1e293b');
+                    el.setAttribute('stroke', '#64748b');
+                }
+            });
 
-      cardEl.className = `card ${card.type} ${isSelected ? 'selected' : ''} ${disabled ? 'disabled' : ''}`;
-      cardEl.innerHTML = `
-        <div><span class="card-type-tag">${typeTagText}</span></div>
-        <div class="card-title">${card.name}</div>
-        <div class="card-icon">${card.icon}</div>
-        <div class="card-desc">${card.desc}</div>
-        <div class="card-val">${card.val > 0 ? card.val : ''}</div>
-      `;
-      cardEl.onclick = () => toggleSelectCard(idx);
-      handEl.appendChild(cardEl);
-    });
-  }
+            // BSO lights
+            for (let i = 1; i <= 3; i++) {
+                document.getElementById(`b-dot-${i}`).className =
+                    `w-2.5 h-2.5 rounded-full border ${i <= gameState.balls ? 'bg-emerald-400 border-emerald-200 shadow-[0_0_6px_#34d399]' : 'bg-slate-800 border-slate-600'}`;
+            }
+            for (let i = 1; i <= 2; i++) {
+                document.getElementById(`s-dot-${i}`).className =
+                    `w-2.5 h-2.5 rounded-full border ${i <= gameState.strikes ? 'bg-amber-400 border-amber-200 shadow-[0_0_6px_#fbbf24]' : 'bg-slate-800 border-slate-600'}`;
+                document.getElementById(`o-dot-${i}`).className =
+                    `w-2.5 h-2.5 rounded-full border ${i <= gameState.outs ? 'bg-rose-500 border-rose-200 shadow-[0_0_6px_#f43f5e]' : 'bg-slate-800 border-slate-600'}`;
+            }
 
-  function renderFieldCards(slotId, cards) {
-    const slot = document.getElementById(slotId);
-    slot.innerHTML = '';
-    cards.forEach(card => {
-      const el = document.createElement('div');
-      let typeTagText = '공격';
-      if (card.type === 'DEFENSE') typeTagText = '방어';
-      if (card.type === 'SPECIAL') typeTagText = '특수';
-      if (card.type === 'ULTIMATE') typeTagText = '★궁극기';
+            // Spirit Bar & Special Ability Buttons
+            document.getElementById('hud-spirit-text').textContent = `${gameState.spirit}%`;
+            document.getElementById('hud-spirit-bar').style.width = `${gameState.spirit}%`;
 
-      el.className = `card ${card.type}`;
-      el.style.cursor = 'default';
-      el.innerHTML = `
-        <div><span class="card-type-tag">${typeTagText}</span></div>
-        <div class="card-title">${card.name}</div>
-        <div class="card-icon">${card.icon}</div>
-        <div class="card-val">${card.val > 0 ? card.val : ''}</div>
-      `;
-      slot.appendChild(el);
-    });
-  }
+            const batSpiritBtn = document.getElementById('bat-spirit-btn');
+            const pitchSpiritBtn = document.getElementById('pitch-spirit-btn');
 
-  function clearField() {
-    document.getElementById('attack-cards-slot').innerHTML = '';
-    document.getElementById('defense-cards-slot').innerHTML = '';
-    currentAttackCards = [];
-  }
+            if (gameState.spirit >= 100 || gameState.spiritActive) {
+                batSpiritBtn.disabled = false;
+                pitchSpiritBtn.disabled = false;
+                batSpiritBtn.className = `px-3 py-1.5 rounded-xl font-extrabold text-xs transition cursor-pointer spirit-ready ${gameState.spiritActive ? 'bg-amber-400 text-slate-950' : 'bg-gradient-to-r from-amber-500 to-rose-500 text-white'}`;
+                batSpiritBtn.textContent = gameState.spiritActive ? '⚡ 클러치 집중 발동 중!' : '⚡ 클러치 집중 발동!';
 
-  function updateButtons() {
-    document.getElementById('btn-submit').disabled = !isMyTurn || selectedCardIndices.length === 0;
-    document.getElementById('btn-draw').disabled = !isMyTurn;
-  }
+                pitchSpiritBtn.className = `px-2.5 py-1.5 rounded-xl font-extrabold text-xs transition cursor-pointer spirit-ready ${gameState.spiritActive ? 'bg-amber-400 text-slate-950' : 'bg-gradient-to-r from-rose-500 to-amber-500 text-white'}`;
+                pitchSpiritBtn.textContent = gameState.spiritActive ? '🔥 불꽃 직구 장전됨!' : '🔥 불꽃 직구 발동!';
+            } else {
+                batSpiritBtn.disabled = true;
+                pitchSpiritBtn.disabled = true;
+                batSpiritBtn.className = 'px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-600 text-slate-400 text-xs font-extrabold';
+                batSpiritBtn.textContent = `⚡ 클러치 집중 (${gameState.spirit}%)`;
+                pitchSpiritBtn.className = 'px-2.5 py-1.5 rounded-xl bg-slate-800 border border-slate-600 text-slate-400 text-xs font-extrabold';
+                pitchSpiritBtn.textContent = `🔥 불꽃 직구 (${gameState.spirit}%)`;
+            }
 
-  function addLog(msg) {
-    const logEl = document.getElementById('log');
-    logEl.innerHTML += `<div>• ${msg}</div>`;
-    logEl.scrollTop = logEl.scrollHeight;
-  }
-</script>
+            // Toggle Batting vs Pitching Panels
+            const batPanel = document.getElementById('batting-controls');
+            const pitchPanel = document.getElementById('pitching-controls');
+            if (gameState.isTop) {
+                batPanel.classList.remove('hidden');
+                pitchPanel.classList.add('hidden');
+                const batter = PLAYER_ROSTER[gameState.playerBatterIdx % PLAYER_ROSTER.length];
+                document.getElementById('batter-info-text').textContent = `${batter.name} (타율 ${batter.avg} / 홈런 ${batter.hr})`;
+
+                // Steal button status
+                const stealBtn = document.getElementById('steal-btn');
+                const stealStatus = document.getElementById('steal-status');
+                const canSteal = (gameState.bases[0] && !gameState.bases[1]) || (gameState.bases[1] && !gameState.bases[2]);
+                if (gameState.stealRequested) {
+                    stealBtn.className = 'py-2.5 px-2 rounded-xl border-2 border-emerald-400 bg-emerald-500/25 text-emerald-200 font-bold text-xs sm:text-sm transition cursor-pointer';
+                    stealStatus.textContent = '도루 스타트 예약됨!';
+                } else if (canSteal) {
+                    stealBtn.className = 'py-2.5 px-2 rounded-xl border border-slate-600 bg-slate-800/80 text-white hover:border-emerald-400 font-bold text-xs sm:text-sm transition cursor-pointer';
+                    stealStatus.textContent = '터치하여 도루 작전';
+                } else {
+                    stealBtn.className = 'py-2.5 px-2 rounded-xl border border-slate-800 bg-slate-900/50 text-slate-500 font-bold text-xs sm:text-sm';
+                    stealStatus.textContent = '도루 가능 주자 없음';
+                }
+            } else {
+                batPanel.classList.add('hidden');
+                pitchPanel.classList.remove('hidden');
+                document.getElementById('pitcher-name-text').textContent = gameState.playerPitcherName;
+                const stamBar = document.getElementById('pitcher-stamina-bar');
+                stamBar.style.width = `${gameState.pitcherStamina}%`;
+                stamBar.className = `h-full transition-all ${gameState.pitcherStamina > 50 ? 'bg-emerald-400' : gameState.pitcherStamina > 25 ? 'bg-amber-400' : 'bg-rose-500'}`;
+            }
+        }
+
+        /**
+         * ============================================================================
+         * 5. BATTING & PITCHING MECHANICS
+         * ============================================================================
+         */
+        function triggerAiPitch() {
+            if (!gameState.isTop || gameState.phase !== 'idle' || gameState.viewMode !== 'duel') return;
+
+            const opp = OPPONENTS[gameState.opponentKey];
+            const pitchTypes = ['fastball', 'slider', 'curve', 'fork'];
+            // Higher difficulty pitchers mix breaking balls smarter
+            const chosenType = gameState.strikes === 2 && Math.random() < 0.65
+                ? (Math.random() < 0.5 ? 'fork' : 'slider')
+                : pitchTypes[Math.floor(Math.random() * pitchTypes.length)];
+
+            // Decide if strike or ball (realistic 62% strike rate)
+            const wantStrike = gameState.balls === 3 ? true : Math.random() < 0.63;
+            let endX, endY;
+            if (wantStrike) {
+                endX = 0.15 + Math.random() * 0.7;
+                endY = 0.15 + Math.random() * 0.7;
+            } else {
+                // Just outside strike zone
+                endX = Math.random() < 0.5 ? -0.14 + Math.random() * 0.12 : 1.02 + Math.random() * 0.12;
+                endY = Math.random() < 0.5 ? 0.2 + Math.random() * 0.6 : 1.05 + Math.random() * 0.12;
+            }
+
+            // Compute pitch curve & speed
+            let speed = opp.maxSpeed - Math.floor(Math.random() * 7);
+            let curveX = 0, curveY = 0;
+            if (chosenType === 'slider') {
+                speed -= 11;
+                curveX = 0.28;
+            } else if (chosenType === 'curve') {
+                speed -= 21;
+                curveY = 0.34;
+                curveX = 0.14;
+            } else if (chosenType === 'fork') {
+                speed -= 13;
+                curveY = 0.38;
+            }
+
+            gameState.ball = {
+                active: true,
+                progress: 0,
+                startX: 0.5,
+                startY: 0.25,
+                endX,
+                endY,
+                curveX,
+                curveY,
+                speedKmh: speed,
+                type: chosenType,
+                isStrike: endX >= 0 && endX <= 1 && endY >= 0 && endY <= 1,
+                isFireball: speed >= 150
+            };
+
+            gameState.phase = 'pitch_flight';
+            gameState.pitcherWindupAnim = 0;
+            gameState.batterSwingAnim = 0;
+
+            if (gameState.stealRequested) {
+                addCommentary(`🏃 주자가 스타트를 끊었습니다! 도루 시도!`, 'info');
+            }
+        }
+
+        function executePlayerSwing() {
+            if (!gameState.isTop) return;
+
+            // If pitch hasn't been thrown yet, clicking Swing triggers pitch immediately for snappy flow!
+            if (gameState.phase === 'idle') {
+                triggerAiPitch();
+                return;
+            }
+
+            if (gameState.phase !== 'pitch_flight' || gameState.batterSwingAnim > 0) return;
+
+            gameState.batterSwingAnim = 0.01;
+            const b = gameState.ball;
+            // Ideal hit window is when ball progress is around 0.86 to 1.03
+            const timingError = Math.abs(b.progress - 0.93);
+
+            // Current ball position at home plate plane
+            const ballCurX = b.endX;
+            const ballCurY = b.endY;
+
+            // Distance between batting meet cursor and ball
+            const dx = gameState.cursorX - ballCurX;
+            const dy = gameState.cursorY - ballCurY;
+            const dist = Math.hypot(dx, dy);
+
+            // Meet radius based on swing mode, archetype & spirit active
+            let meetRadius = gameState.swingMode === 'contact' ? 0.25 : gameState.swingMode === 'bunt' ? 0.32 : 0.17;
+            if (gameState.archetype === 'slugger') meetRadius += 0.03;
+            if (gameState.archetype === 'pitching') meetRadius -= 0.02;
+            if (gameState.spiritActive) meetRadius += 0.09;
+
+            const pitchNames = { fastball: '직구', slider: '슬라이더', curve: '커브', fork: '포크볼' };
+            updatePitchRadar(b.speedKmh, pitchNames[b.type]);
+
+            // Check Whiff (헛스윙)
+            if (timingError > 0.14 || dist > meetRadius) {
+                audio.playSwingWhoosh();
+                setTimeout(() => audio.playMittPop(b.speedKmh / 140), 90);
+                b.active = false;
+                gameState.phase = 'idle';
+                resolveStealIfAny(false);
+
+                if (gameState.swingMode === 'bunt' && gameState.strikes === 2) {
+                    addCommentary(`쓰리번트 실패! 아웃이 선언됩니다.`, 'danger');
+                    recordOut();
+                    return;
+                }
+
+                gameState.strikes++;
+                addCommentary(`${b.speedKmh}km/h ${pitchNames[b.type]}에 헛스윙! (스트라이크 ${gameState.strikes})`, 'normal');
+                if (gameState.strikes >= 3) {
+                    audio.playBrassFanfare('strikeout');
+                    addCommentary(`삼진 아웃! 상대 투수의 결정구에 배트가 헛돌았습니다.`, 'danger');
+                    recordOut();
+                } else {
+                    updateHUD();
+                }
+                return;
+            }
+
+            // Contact made! Consume spirit if active
+            const wasSpiritActive = gameState.spiritActive;
+            if (gameState.spiritActive) {
+                gameState.spiritActive = false;
+                gameState.spirit = 0;
+            }
+
+            // Quality of contact (0 to 1, where 1 is barrel sweet-spot)
+            const accuracyScore = Math.max(0, 1 - (dist / meetRadius) * 0.65 - (timingError / 0.14) * 0.35);
+
+            // Check Foul Ball (if timing slightly off or grazed edge)
+            if (timingError > 0.085 && Math.random() < 0.68 && gameState.swingMode !== 'bunt') {
+                audio.playBatPing(0.65);
+                b.active = false;
+                gameState.phase = 'idle';
+                if (gameState.strikes < 2) gameState.strikes++;
+                addCommentary(`파울! 날카로운 타구가 관중석으로 날아갑니다.`, 'normal');
+                updateHUD();
+                return;
+            }
+
+            // Fair Ball Launch!
+            b.active = false;
+            let powerFactor = accuracyScore;
+            if (gameState.swingMode === 'power') powerFactor *= 1.28;
+            if (gameState.swingMode === 'bunt') powerFactor = 0.18;
+            if (gameState.archetype === 'slugger') powerFactor *= 1.12;
+            if (wasSpiritActive) powerFactor *= 1.25;
+
+            // Spray direction (-1 left field, 0 center, +1 right field)
+            const sprayAngle = Math.max(-0.9, Math.min(0.9, (gameState.cursorX - ballCurX) * 2.5 + (Math.random() - 0.5) * 0.5));
+            launchBallIntoPlay(powerFactor, sprayAngle, true);
+        }
+
+        // Player Pitching Flow
+        function startPlayerPitchSequence() {
+            if (gameState.isTop || gameState.phase !== 'idle' || gameState.viewMode !== 'duel') return;
+            gameState.phase = 'pitch_timing';
+            gameState.timingPos = 0;
+            gameState.timingDir = 1;
+            document.getElementById('pitch-timing-overlay').classList.remove('hidden');
+        }
+
+        function lockPlayerPitchTiming() {
+            if (gameState.phase !== 'pitch_timing') return;
+            document.getElementById('pitch-timing-overlay').classList.add('hidden');
+
+            // Sweet spot is centered around 0.74 (70% to 78%)
+            const distFromSweet = Math.abs(gameState.timingPos - 0.74);
+            const timingQuality = Math.max(0, 1 - distFromSweet * 3.2); // 1.0 = perfect, <0.4 = wild/mistake
+
+            let baseMax = gameState.archetype === 'pitching' ? 151 : 145;
+            if (gameState.pitcherRelieved) baseMax -= 3;
+            // Stamina penalty
+            const staminaPenalty = Math.max(0, (60 - gameState.pitcherStamina) * 0.18);
+            baseMax -= staminaPenalty;
+
+            const isFireball = gameState.spiritActive && gameState.selectedPitchType === 'fastball';
+            if (gameState.spiritActive) {
+                gameState.spiritActive = false;
+                gameState.spirit = 0;
+            }
+
+            let speed = Math.round(baseMax - (1 - timingQuality) * 8 + (isFireball ? 9 : 0));
+            let curveX = 0, curveY = 0;
+            const pType = gameState.selectedPitchType;
+            if (pType === 'slider') {
+                speed -= 10;
+                curveX = -0.28 * (0.6 + timingQuality * 0.4);
+            } else if (pType === 'curve') {
+                speed -= 20;
+                curveY = 0.34 * (0.6 + timingQuality * 0.4);
+                curveX = -0.12;
+            } else if (pType === 'fork') {
+                speed -= 12;
+                curveY = 0.38 * (0.6 + timingQuality * 0.4);
+            }
+
+            // Control scatter if timing was poor
+            const scatter = (1 - timingQuality) * 0.42;
+            const endX = gameState.targetZoneX + (Math.random() - 0.5) * scatter;
+            const endY = gameState.targetZoneY + (Math.random() - 0.5) * scatter;
+
+            gameState.ball = {
+                active: true,
+                progress: 0,
+                startX: 0.5,
+                startY: 0.25,
+                endX,
+                endY,
+                curveX,
+                curveY,
+                speedKmh: speed,
+                type: pType,
+                isStrike: endX >= 0 && endX <= 1 && endY >= 0 && endY <= 1,
+                isFireball
+            };
+
+            if (speed > gameState.stats.maxPitchSpeed) {
+                gameState.stats.maxPitchSpeed = speed;
+            }
+
+            gameState.pitcherStamina = Math.max(10, gameState.pitcherStamina - (isFireball ? 5 : 2.5));
+            gameState.phase = 'pitch_flight';
+            gameState.pitcherWindupAnim = 0;
+            gameState.batterSwingAnim = 0;
+
+            if (isFireball) {
+                addCommentary(`🔥 혼신의 불꽃 직구!! 시속 ${speed}km/h의 광속구가 포수 미트를 향해 날아갑니다!`, 'highlight');
+            }
+            updateHUD();
+        }
+
+        function resolveAiBatterAgainstPlayerPitch() {
+            const b = gameState.ball;
+            const opp = OPPONENTS[gameState.opponentKey];
+            const pitchNames = { fastball: '직구', slider: '슬라이더', curve: '커브', fork: '포크볼' };
+            updatePitchRadar(b.speedKmh, b.isFireball ? '🔥불꽃직구' : pitchNames[b.type]);
+
+            // AI decision to swing
+            const chaseProb = b.isStrike ? 0.78 : (gameState.strikes === 2 ? 0.36 : 0.16);
+            const willSwing = Math.random() < chaseProb;
+
+            if (!willSwing) {
+                audio.playMittPop(b.speedKmh / 140);
+                if (b.isStrike) {
+                    gameState.strikes++;
+                    addCommentary(`스트라이크! 보더라인에 꽂히는 ${b.speedKmh}km/h ${pitchNames[b.type]}!`, 'info');
+                    if (gameState.strikes >= 3) {
+                        gameState.stats.strikeouts++;
+                        gainSpirit(18);
+                        audio.playBrassFanfare('strikeout');
+                        addCommentary(`삼진 아웃!! 타자가 얼어붙었습니다! (투혼 게이지 상승)`, 'highlight');
+                        recordOut();
+                        return;
+                    }
+                } else {
+                    gameState.balls++;
+                    addCommentary(`볼! 유인구에 상대 타자가 참아냅니다. (볼 ${gameState.balls})`, 'normal');
+                    if (gameState.balls >= 4) {
+                        addCommentary(`볼넷 허용! 타자가 1루로 걸어나갑니다.`, 'danger');
+                        advanceRunnersOnWalk();
+                        return;
+                    }
+                }
+                gameState.phase = 'idle';
+                updateHUD();
+                return;
+            }
+
+            // AI Swings!
+            gameState.batterSwingAnim = 0.01;
+            let contactChance = opp.batSkill * (b.isStrike ? 0.92 : 0.45);
+            if (b.isFireball) contactChance *= 0.42;
+            if (b.type === 'fork' && gameState.strikes === 2) contactChance *= 0.72;
+
+            if (Math.random() > contactChance) {
+                // Whiff!
+                audio.playSwingWhoosh();
+                setTimeout(() => audio.playMittPop(b.speedKmh / 140), 80);
+                gameState.strikes++;
+                addCommentary(`헛스윙! 날카로운 ${pitchNames[b.type]}에 방망이가 허공을 가릅니다!`, 'info');
+                if (gameState.strikes >= 3) {
+                    gameState.stats.strikeouts++;
+                    gainSpirit(20);
+                    audio.playBrassFanfare('strikeout');
+                    addCommentary(`삼진 아웃!! 포효하는 에이스! (투혼 게이지 +20%)`, 'highlight');
+                    recordOut();
+                    return;
+                }
+                gameState.phase = 'idle';
+                updateHUD();
+                return;
+            }
+
+            // AI Makes Contact
+            if (Math.random() < 0.32) {
+                audio.playBatPing(0.6);
+                if (gameState.strikes < 2) gameState.strikes++;
+                addCommentary(`파울 타구! 끈질기게 커트해냅니다.`, 'normal');
+                gameState.phase = 'idle';
+                updateHUD();
+                return;
+            }
+
+            const aiPower = (0.35 + Math.random() * 0.65) * (b.isFireball ? 0.65 : 1.0);
+            const spray = (Math.random() - 0.5) * 1.6;
+            launchBallIntoPlay(aiPower, spray, false);
+        }
+
+        function updatePitchRadar(speed, label) {
+            document.getElementById('hud-pitch-speed').textContent = `${speed} km/h`;
+            document.getElementById('hud-pitch-info').textContent = label;
+            document.getElementById('mobile-speed-val').textContent = `${speed}km (${label})`;
+        }
+
+        /**
+         * ============================================================================
+         * 6. IN-PLAY SIMULATION & BASEBALL RULES ENGINE
+         * ============================================================================
+         */
+        function launchBallIntoPlay(powerFactor, sprayAngle, isPlayerBatting) {
+            audio.playBatPing(Math.min(1.35, 0.75 + powerFactor * 0.5));
+
+            // Determine hit outcome based on powerFactor
+            let isHR = false, isHit = false, basesGained = 0, isOut = false;
+            let outcomeText = '', outcomeSub = '', arcHeight = 40;
+            let landingDist = 0.35; // 0 (home) to 1.0+ (over fence)
+
+            if (powerFactor >= 1.06) {
+                // HOME RUN!
+                isHR = true;
+                isHit = true;
+                basesGained = 4;
+                landingDist = 1.08;
+                arcHeight = 95;
+                outcomeText = 'HOMERUN!!';
+                outcomeSub = '백스크린을 직격하는 초대형 홈런!!';
+            } else if (powerFactor >= 0.86) {
+                // Triple or Double
+                isHit = true;
+                if (Math.abs(sprayAngle) > 0.58 && Math.random() < 0.35) {
+                    basesGained = 3;
+                    landingDist = 0.88;
+                    arcHeight = 65;
+                    outcomeText = '3루타!!';
+                    outcomeSub = '우중간 깊숙이 가르는 장타! 타자주자 3루까지 질주!';
+                } else {
+                    basesGained = 2;
+                    landingDist = 0.80;
+                    arcHeight = 58;
+                    outcomeText = '2루타!';
+                    outcomeSub = '외야수 키를 넘기는 통렬한 2루타!';
+                }
+            } else if (powerFactor >= 0.58) {
+                // Clean Single or Outfield Flyout
+                if (Math.random() < 0.72) {
+                    isHit = true;
+                    basesGained = 1;
+                    landingDist = 0.62;
+                    arcHeight = 32;
+                    outcomeText = '깨끗한 안타!';
+                    outcomeSub = '내야수 사이를 꿰뚫는 적시타!';
+                } else {
+                    isOut = true;
+                    landingDist = 0.72;
+                    arcHeight = 78;
+                    outcomeText = '외야 뜬공 아웃';
+                    outcomeSub = '외야수가 끝까지 쫓아가 안전하게 포구합니다.';
+                }
+            } else {
+                // Weak grounder / bunt / infield pop
+                if (gameState.swingMode === 'bunt' && isPlayerBatting && Math.random() < 0.45) {
+                    // Sacrifice bunt advances runners even on out!
+                    isOut = true;
+                    landingDist = 0.25;
+                    arcHeight = 12;
+                    outcomeText = '희생번트 성공!';
+                    outcomeSub = '투수 앞 절묘한 번트! 주자들이 다음 루로 진루합니다.';
+                } else if (Math.random() < 0.18) {
+                    // Infield single!
+                    isHit = true;
+                    basesGained = 1;
+                    landingDist = 0.34;
+                    arcHeight = 14;
+                    outcomeText = '내야 안타!';
+                    outcomeSub = '1루에 헤드퍼스트 슬라이딩! 세이프!';
+                } else {
+                    isOut = true;
+                    landingDist = 0.36;
+                    arcHeight = 18;
+                    outcomeText = '내야 땅볼 아웃';
+                    outcomeSub = '유격수가 침착하게 잡아 1루로 송구, 아웃!';
+                }
+            }
+
+            // Convert polar (landingDist, sprayAngle) to Diamond Canvas coordinates
+            // Home plate in field view is at (0.5, 0.84)
+            const angleRad = sprayAngle * 0.72; // within foul lines (-41 deg to +41 deg)
+            const maxRadius = 0.66;
+            const endX = 0.5 + Math.sin(angleRad) * landingDist * maxRadius;
+            const endY = 0.84 - Math.cos(angleRad) * landingDist * maxRadius;
+
+            gameState.inPlay = {
+                timer: 0,
+                duration: isHR ? 2.8 : 2.2,
+                ballStartX: 0.5,
+                ballStartY: 0.84,
+                ballEndX: endX,
+                ballEndY: endY,
+                maxArcHeight: arcHeight,
+                outcomeText,
+                outcomeSub,
+                isHit,
+                isHR,
+                basesGained,
+                isOut,
+                isSacBunt: outcomeText === '희생번트 성공!',
+                isSacFly: isOut && landingDist >= 0.68 && gameState.bases[2] && gameState.outs < 2,
+                isPlayerBatting,
+                runnerProgress: 0
+            };
+
+            gameState.viewMode = 'field';
+            gameState.phase = 'in_play';
+
+            if (isHR) {
+                audio.playCrowdCheer(2.6, 0.38);
+                audio.playBrassFanfare('homerun');
+            } else if (isHit) {
+                audio.playCrowdCheer(1.6, 0.26);
+                audio.playBrassFanfare('hit');
+            }
+        }
+
+        function finishInPlayResolution() {
+            const ip = gameState.inPlay;
+            gameState.viewMode = 'duel';
+            gameState.phase = 'idle';
+            gameState.balls = 0;
+            gameState.strikes = 0;
+            gameState.stealRequested = false;
+
+            if (ip.isHit) {
+                if (ip.isPlayerBatting) {
+                    gameState.awayHits++;
+                    gameState.stats.hits++;
+                    if (ip.isHR) gameState.stats.hrs++;
+                    gainSpirit(ip.isHR ? 45 : 22);
+                } else {
+                    gameState.homeHits++;
+                }
+
+                const runsScored = advanceBases(ip.basesGained, true);
+                if (ip.isPlayerBatting) gameState.stats.rbis += runsScored;
+
+                const dirText = ip.ballEndX < 0.42 ? '좌측' : ip.ballEndX > 0.58 ? '우측' : '중견수 방면';
+                if (ip.isHR) {
+                    addCommentary(`🎆 홈런!! ${dirText} 담장을 훌쩍 넘기는 대형 홈런! (${runsScored}타점)`, 'highlight');
+                    showBanner('HOMERUN!!', `${runsScored}점 홈런!`, ip.outcomeSub, 2100);
+                } else {
+                    addCommentary(`⚾ ${dirText} ${ip.outcomeText}! ${runsScored > 0 ? `${runsScored}명의 주자가 홈을 밟습니다!` : ''}`, ip.isPlayerBatting ? 'highlight' : 'danger');
+                    if (runsScored > 0) {
+                        showBanner('SCORE!', `${runsScored}득점 성공!`, '3루 주자 홈인! 헤드퍼스트 슬라이딩!', 1600);
+                    }
+                }
+
+                advanceBatterLineup();
+                if (checkWalkOffOrImmediateEnd()) return;
+                updateHUD();
+            } else {
+                // Out recorded
+                let bonusMsg = '';
+                if ((ip.isSacBunt || ip.isSacFly) && gameState.outs < 2) {
+                    const runs = advanceBases(1, false);
+                    if (runs > 0) {
+                        bonusMsg = ` 3루 주자 태그업 홈인! (${runs}득점)`;
+                        if (ip.isPlayerBatting) gameState.stats.rbis += runs;
+                    } else {
+                        bonusMsg = ' 주자들이 진루에 성공했습니다.';
+                    }
+                }
+                addCommentary(`${ip.outcomeText}.${bonusMsg}`, ip.isPlayerBatting ? 'normal' : 'info');
+                if (!ip.isPlayerBatting) gainSpirit(12); // Good defense boosts spirit!
+                recordOut();
+            }
+        }
+
+        function advanceBases(basesToAdvance, batterGetsOnBase) {
+            let runs = 0;
+            const newBases = [false, false, false];
+
+            // Advance existing runners from 3rd down to 1st
+            for (let i = 2; i >= 0; i--) {
+                if (gameState.bases[i]) {
+                    const dest = i + basesToAdvance;
+                    if (dest >= 3) {
+                        runs++;
+                    } else {
+                        newBases[dest] = true;
+                    }
+                }
+            }
+
+            // Place batter on base
+            if (batterGetsOnBase) {
+                if (basesToAdvance >= 4) {
+                    runs++;
+                } else {
+                    newBases[basesToAdvance - 1] = true;
+                }
+            }
+
+            gameState.bases = newBases;
+            if (runs > 0) {
+                addRuns(runs);
+            }
+            return runs;
+        }
+
+        function advanceRunnersOnWalk() {
+            let runs = 0;
+            if (gameState.bases[0]) {
+                if (gameState.bases[1]) {
+                    if (gameState.bases[2]) {
+                        runs++;
+                    }
+                    gameState.bases[2] = true;
+                }
+                gameState.bases[1] = true;
+            }
+            gameState.bases[0] = true;
+            gameState.balls = 0;
+            gameState.strikes = 0;
+            if (runs > 0) {
+                addRuns(runs);
+                addCommentary(`밀어내기 볼넷으로 ${runs}득점!`, 'highlight');
+            }
+            advanceBatterLineup();
+            if (checkWalkOffOrImmediateEnd()) return;
+            updateHUD();
+        }
+
+        function resolveStealIfAny(contactMade) {
+            if (!gameState.stealRequested || contactMade) {
+                gameState.stealRequested = false;
+                return;
+            }
+            gameState.stealRequested = false;
+            const batter = PLAYER_ROSTER[gameState.playerBatterIdx % PLAYER_ROSTER.length];
+            const successProb = 0.55 + (batter.speed - 70) * 0.008;
+
+            if (Math.random() < successProb) {
+                if (gameState.bases[1] && !gameState.bases[2]) {
+                    gameState.bases[1] = false;
+                    gameState.bases[2] = true;
+                    addCommentary(`⚡ 3루 도루 성공!! 포수의 송구보다 한 발 빨랐습니다!`, 'highlight');
+                    gainSpirit(15);
+                } else if (gameState.bases[0] && !gameState.bases[1]) {
+                    gameState.bases[0] = false;
+                    gameState.bases[1] = true;
+                    addCommentary(`⚡ 2루 도루 성공!! 득점권에 주자를 보냅니다!`, 'highlight');
+                    gainSpirit(15);
+                }
+            } else {
+                if (gameState.bases[1] && !gameState.bases[2]) gameState.bases[1] = false;
+                else if (gameState.bases[0]) gameState.bases[0] = false;
+                addCommentary(`도루 실패! 상대 포수의 레이저 송구에 태그 아웃됩니다.`, 'danger');
+                recordOut(true);
+            }
+        }
+
+        function addRuns(runs) {
+            const inn = gameState.inning;
+            if (gameState.isTop) {
+                gameState.awayScore += runs;
+                gameState.inningScores.away[inn] = (gameState.inningScores.away[inn] || 0) + runs;
+            } else {
+                gameState.homeScore += runs;
+                gameState.inningScores.home[inn] = (gameState.inningScores.home[inn] || 0) + runs;
+            }
+        }
+
+        function advanceBatterLineup() {
+            if (gameState.isTop) {
+                gameState.playerBatterIdx = (gameState.playerBatterIdx + 1) % PLAYER_ROSTER.length;
+            } else {
+                gameState.oppBatterIdx = (gameState.oppBatterIdx + 1) % 9;
+            }
+        }
+
+        function recordOut(skipBatterAdvance = false) {
+            gameState.outs++;
+            gameState.balls = 0;
+            gameState.strikes = 0;
+            gameState.stealRequested = false;
+            if (!skipBatterAdvance) advanceBatterLineup();
+
+            if (gameState.outs >= 3) {
+                switchHalfInning();
+            } else {
+                updateHUD();
+            }
+        }
+
+        function checkWalkOffOrImmediateEnd() {
+            // Bottom of regulation final inning (or extra innings): if Home team takes lead, game ends immediately!
+            if (!gameState.isTop && gameState.inning >= gameState.regEndInning && gameState.homeScore > gameState.awayScore) {
+                endMatch(false, true);
+                return true;
+            }
+            return false;
+        }
+
+        function switchHalfInning() {
+            gameState.outs = 0;
+            gameState.balls = 0;
+            gameState.strikes = 0;
+            gameState.bases = [false, false, false];
+            gameState.spiritActive = false;
+
+            // Ensure current inning has a recorded 0 if no runs scored
+            const inn = gameState.inning;
+            if (gameState.isTop) {
+                if (gameState.inningScores.away[inn] === undefined) gameState.inningScores.away[inn] = 0;
+            } else {
+                if (gameState.inningScores.home[inn] === undefined) gameState.inningScores.home[inn] = 0;
+            }
+
+            if (gameState.isTop) {
+                // Check if Home team is already ahead after Top of final regulation/extra inning
+                if (gameState.inning >= gameState.regEndInning && gameState.homeScore > gameState.awayScore) {
+                    endMatch(false, false);
+                    return;
+                }
+                gameState.isTop = false;
+                const opp = OPPONENTS[gameState.opponentKey];
+                addCommentary(`🔄 공수 교대! ${gameState.inning}회말 ${opp.name}의 공격입니다. 마운드를 지켜내세요!`, 'info');
+                showBanner(`${gameState.inning}회말 수비`, '공수 교대!', `${gameState.playerPitcherName} 마운드 등판!`);
+            } else {
+                // End of a full inning
+                if (gameState.inning >= gameState.regEndInning) {
+                    if (gameState.awayScore > gameState.homeScore) {
+                        endMatch(true, false);
+                        return;
+                    } else if (gameState.homeScore > gameState.awayScore) {
+                        endMatch(false, false);
+                        return;
+                    } else {
+                        // Extra inning!
+                        gameState.inning++;
+                        gameState.isTop = true;
+                        addCommentary(`🔥 동점 승부! 연장 ${gameState.inning}회초 승부치기에 돌입합니다!`, 'highlight');
+                        showBanner(`연장 ${gameState.inning}회초`, '운명의 연장전!', '한 점이 승부를 가릅니다!');
+                        updateHUD();
+                        return;
+                    }
+                }
+
+                gameState.inning++;
+                gameState.isTop = true;
+                addCommentary(`🔄 공수 교대! ${gameState.inning}회초 ${gameState.schoolName}의 공격입니다!`, 'info');
+                showBanner(`${gameState.inning}회초 공격`, `${gameState.schoolName} 공격`, '찬스를 만들어 점수를 뽑아내자!');
+            }
+            updateHUD();
+        }
+
+        function endMatch(playerWon, isWalkOff) {
+            gameState.phase = 'gameover';
+            audio.playKoshienSiren(2.2);
+
+            const opp = OPPONENTS[gameState.opponentKey];
+            const card = document.getElementById('ending-card');
+            const badge = document.getElementById('ending-badge');
+            const emoji = document.getElementById('ending-emoji');
+            const title = document.getElementById('ending-title');
+            const subtitle = document.getElementById('ending-subtitle');
+
+            if (playerWon) {
+                audio.playBrassFanfare('homerun');
+                audio.playCrowdCheer(3.0, 0.35);
+                card.className = 'max-w-lg w-full rounded-3xl p-6 sm:p-8 border-2 border-amber-400 bg-gradient-to-b from-amber-950/95 via-slate-900 to-slate-950 shadow-2xl text-center relative overflow-hidden';
+                badge.className = 'inline-block px-4 py-1 rounded-full text-xs font-black tracking-wider mb-3 bg-amber-400 text-slate-950';
+                badge.textContent = `${opp.stage} 승리!`;
+                emoji.textContent = gameState.opponentKey === 'final' ? '🏆' : '🎊';
+                title.textContent = gameState.opponentKey === 'final' ? '고시엔 전국 제패!!' : '감격의 승리!';
+                subtitle.textContent = gameState.opponentKey === 'final'
+                    ? `한신 고시엔 구장에 ${gameState.schoolName}의 교가가 울려 퍼집니다! 빛나는 심홍색 대우승기를 품에 안았습니다!`
+                    : `치열한 접전 끝에 강호 ${opp.name}을 꺾고 다음 라운드로 진출합니다!`;
+            } else {
+                card.className = 'max-w-lg w-full rounded-3xl p-6 sm:p-8 border-2 border-slate-600 bg-gradient-to-b from-slate-800/95 via-slate-900 to-slate-950 shadow-2xl text-center relative overflow-hidden';
+                badge.className = 'inline-block px-4 py-1 rounded-full text-xs font-black tracking-wider mb-3 bg-slate-700 text-slate-200';
+                badge.textContent = isWalkOff ? '아쉬운 끝내기 패배' : `${opp.stage} 석패`;
+                emoji.textContent = '⚾';
+                title.textContent = '고시엔의 검은 흙을 담으며...';
+                subtitle.textContent = `끝까지 포기하지 않은 명승부였습니다. 선수들이 눈물을 닦으며 고시엔의 검은 흙(쿠로츠치)을 주머니에 담고 다음 여름을 기약합니다.`;
+            }
+
+            document.getElementById('end-away-name').textContent = gameState.schoolName;
+            document.getElementById('end-away-score').textContent = gameState.awayScore;
+            document.getElementById('end-home-name').textContent = opp.name;
+            document.getElementById('end-home-score').textContent = gameState.homeScore;
+
+            const mvpName = gameState.stats.hrs > 0
+                ? '4번 타자 유우키'
+                : gameState.stats.strikeouts >= 2
+                    ? gameState.playerPitcherName
+                    : '포수 미유키';
+            document.getElementById('end-mvp').textContent = mvpName;
+            document.getElementById('end-bat-summary').textContent = `${gameState.awayHits}안타 ${gameState.stats.hrs}홈런`;
+            document.getElementById('end-pitch-summary').textContent = `${gameState.stats.strikeouts}삼진 / ${gameState.stats.maxPitchSpeed || 145}km`;
+
+            setTimeout(() => {
+                document.getElementById('ending-screen').classList.remove('hidden');
+            }, 700);
+        }
+
+        /**
+         * ============================================================================
+         * 7. HTML5 CANVAS RENDERER (DUEL VIEW & KOSHIEN DIAMOND IN-PLAY VIEW)
+         * ============================================================================
+         */
+        const canvas = document.getElementById('stadium-canvas');
+        const ctx = canvas.getContext('2d');
+        let strikeZoneRect = { x: 0, y: 0, w: 0, h: 0 };
+
+        function resizeCanvas() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+
+        function drawDuelView(w, h) {
+            const opp = OPPONENTS[gameState.opponentKey];
+
+            // 1. Summer Sky & Cumulonimbus Clouds
+            const skyGrad = ctx.createLinearGradient(0, 0, 0, h * 0.48);
+            skyGrad.addColorStop(0, '#0284c7');
+            skyGrad.addColorStop(1, '#7dd3fc');
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, w, h * 0.48);
+
+            // Billowing Summer Clouds
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+            const clouds = [
+                [w * 0.15, h * 0.13, 36], [w * 0.19, h * 0.11, 44], [w * 0.24, h * 0.14, 32],
+                [w * 0.78, h * 0.12, 40], [w * 0.83, h * 0.10, 50], [w * 0.89, h * 0.14, 34]
+            ];
+            clouds.forEach(([cx, cy, r]) => {
+                ctx.beginPath();
+                ctx.arc(cx, cy, r, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // 2. Koshien Alps Stands & Ivy Outfield Wall
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(0, h * 0.28, w, h * 0.14);
+
+            // Packed crowd dots & waving school flags
+            const timeSec = performance.now() * 0.004;
+            for (let i = 0; i < 45; i++) {
+                const sx = (i / 45) * w + 8;
+                const sy = h * 0.31 + (i % 3) * 10 + Math.sin(timeSec + i) * 2;
+                ctx.fillStyle = i % 2 === 0 ? gameState.teamColor : '#f8fafc';
+                ctx.beginPath();
+                ctx.arc(sx, sy, 3.2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Iconic Koshien Ivy Wall (담쟁이덩굴 외야 펜스)
+            const wallGrad = ctx.createLinearGradient(0, h * 0.38, 0, h * 0.46);
+            wallGrad.addColorStop(0, '#14532d');
+            wallGrad.addColorStop(1, '#166534');
+            ctx.fillStyle = wallGrad;
+            ctx.fillRect(0, h * 0.38, w, h * 0.08);
+            ctx.fillStyle = '#fef08a';
+            ctx.font = 'bold 10px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('118m  |  HANSHIN KOSHIEN STADIUM  |  118m', w * 0.5, h * 0.43);
+
+            // 3. Outfield Emerald Grass & Infield Kurotsuchi (Black Soil)
+            const grassGrad = ctx.createLinearGradient(0, h * 0.46, 0, h * 0.65);
+            grassGrad.addColorStop(0, '#15803d');
+            grassGrad.addColorStop(1, '#22c55e');
+            ctx.fillStyle = grassGrad;
+            ctx.fillRect(0, h * 0.46, w, h * 0.2);
+
+            // Kurotsuchi (Famous Koshien Dark Volcanic Dirt)
+            const dirtGrad = ctx.createLinearGradient(0, h * 0.60, 0, h);
+            dirtGrad.addColorStop(0, '#3f3835');
+            dirtGrad.addColorStop(1, '#292524');
+            ctx.fillStyle = dirtGrad;
+            ctx.beginPath();
+            ctx.moveTo(0, h * 0.64);
+            ctx.quadraticCurveTo(w * 0.5, h * 0.54, w, h * 0.64);
+            ctx.lineTo(w, h);
+            ctx.lineTo(0, h);
+            ctx.closePath();
+            ctx.fill();
+
+            // White Foul Lines & Batter's Box
+            ctx.strokeStyle = 'rgba(255,255,255,0.75)';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(w * 0.5, h * 0.90);
+            ctx.lineTo(w * 0.05, h * 0.63);
+            ctx.moveTo(w * 0.5, h * 0.90);
+            ctx.lineTo(w * 0.95, h * 0.63);
+            ctx.stroke();
+
+            // Home Plate
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.moveTo(w * 0.5, h * 0.91);
+            ctx.lineTo(w * 0.47, h * 0.88);
+            ctx.lineTo(w * 0.47, h * 0.85);
+            ctx.lineTo(w * 0.53, h * 0.85);
+            ctx.lineTo(w * 0.53, h * 0.88);
+            ctx.closePath();
+            ctx.fill();
+
+            // 4. Pitcher on the Mound
+            const moundX = w * 0.5;
+            const moundY = h * 0.56;
+            ctx.fillStyle = '#57534e';
+            ctx.beginPath();
+            ctx.ellipse(moundX, moundY + 14, 34, 9, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            const pitcherColor = gameState.isTop ? opp.color : gameState.teamColor;
+            drawStylizedPlayer(moundX, moundY, 0.72, pitcherColor, true);
+
+            // 5. Strike Zone Box (Interactive Target / Meet Zone)
+            const szW = Math.min(w * 0.25, 165);
+            const szH = Math.min(h * 0.34, 155);
+            const szX = w * 0.5 - szW * 0.5;
+            const szY = h * 0.52;
+            strikeZoneRect = { x: szX, y: szY, w: szW, h: szH };
+
+            // Outer translucent frame
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.28)';
+            ctx.fillRect(szX, szY, szW, szH);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(szX, szY, szW, szH);
+
+            // 3x3 Grid Lines
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+            ctx.lineWidth = 1;
+            for (let i = 1; i <= 2; i++) {
+                ctx.beginPath();
+                ctx.moveTo(szX + (szW / 3) * i, szY);
+                ctx.lineTo(szX + (szW / 3) * i, szY + szH);
+                ctx.moveTo(szX, szY + (szH / 3) * i);
+                ctx.lineTo(szX + szW, szY + (szH / 3) * i);
+                ctx.stroke();
+            }
+
+            // Draw Mode-Specific Interactive Cursor inside Strike Zone
+            if (gameState.isTop) {
+                // Batting Meet Cursor
+                const cx = szX + gameState.cursorX * szW;
+                const cy = szY + gameState.cursorY * szH;
+                let r = gameState.swingMode === 'contact' ? szW * 0.23 : gameState.swingMode === 'bunt' ? szW * 0.28 : szW * 0.16;
+                if (gameState.spiritActive) r *= 1.3;
+
+                ctx.strokeStyle = gameState.spiritActive ? '#fbbf24' : '#38bdf8';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(cx, cy, r, 0, Math.PI * 2);
+                ctx.stroke();
+
+                ctx.fillStyle = gameState.spiritActive ? 'rgba(251, 191, 36, 0.25)' : 'rgba(56, 189, 248, 0.18)';
+                ctx.fill();
+
+                // Sweet spot center dot
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                // Pitching Target Marker
+                const tx = szX + gameState.targetZoneX * szW;
+                const ty = szY + gameState.targetZoneY * szH;
+                ctx.strokeStyle = '#f43f5e';
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                ctx.arc(tx, ty, 11, 0, Math.PI * 2);
+                ctx.moveTo(tx - 15, ty);
+                ctx.lineTo(tx + 15, ty);
+                ctx.moveTo(tx, ty - 15);
+                ctx.lineTo(tx, ty + 15);
+                ctx.stroke();
+            }
+
+            // 6. Batter Silhouette & Bat Swing Animation
+            const batterX = szX - 38;
+            const batterY = szY + szH * 0.55;
+            const batterColor = gameState.isTop ? gameState.teamColor : opp.color;
+            drawBatterFigure(batterX, batterY, batterColor, gameState.batterSwingAnim);
+
+            // 7. Incoming Baseball Flight
+            if (gameState.ball.active) {
+                const b = gameState.ball;
+                const t = b.progress;
+                // Quadratic ease & breaking ball movement late in flight
+                const breakFactor = Math.pow(t, 2.2);
+                const targetPx = szX + (b.endX + b.curveX * breakFactor) * szW;
+                const targetPy = szY + (b.endY + b.curveY * breakFactor) * szH;
+
+                const curX = moundX + (targetPx - moundX) * t;
+                const curY = (moundY - 12) + (targetPy - (moundY - 12)) * t - Math.sin(t * Math.PI) * 16;
+                const ballRadius = 3.5 + t * 7.5;
+
+                // Fireball aura if active
+                if (b.isFireball) {
+                    ctx.fillStyle = 'rgba(249, 115, 22, 0.45)';
+                    ctx.beginPath();
+                    ctx.arc(curX, curY, ballRadius * 2.1, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Baseball shadow
+                ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                ctx.beginPath();
+                ctx.ellipse(curX, curY + ballRadius + 8, ballRadius * 0.9, ballRadius * 0.35, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // White Baseball
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(curX, curY, ballRadius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#dc2626';
+                ctx.lineWidth = 1.2;
+                ctx.stroke();
+            }
+        }
+
+        function drawStylizedPlayer(x, y, scale, jerseyColor, isPitcher) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.scale(scale, scale);
+
+            // Legs
+            ctx.fillStyle = '#f8fafc';
+            ctx.fillRect(-9, 2, 7, 18);
+            ctx.fillRect(2, 2, 7, 18);
+
+            // Jersey Torso
+            ctx.fillStyle = jerseyColor;
+            ctx.beginPath();
+            ctx.roundRect(-12, -18, 24, 22, 5);
+            ctx.fill();
+
+            // Head & Cap
+            ctx.fillStyle = '#fed7aa';
+            ctx.beginPath();
+            ctx.arc(0, -25, 8, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = jerseyColor;
+            ctx.beginPath();
+            ctx.arc(0, -27, 8.5, Math.PI, 0);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function drawBatterFigure(x, y, jerseyColor, swingAnim) {
+            ctx.save();
+            ctx.translate(x, y);
+
+            // Legs
+            ctx.fillStyle = '#f8fafc';
+            ctx.fillRect(-10, 5, 8, 24);
+            ctx.fillRect(2, 5, 8, 24);
+
+            // Jersey
+            ctx.fillStyle = jerseyColor;
+            ctx.beginPath();
+            ctx.roundRect(-13, -22, 26, 29, 6);
+            ctx.fill();
+
+            // Helmet
+            ctx.fillStyle = jerseyColor;
+            ctx.beginPath();
+            ctx.arc(0, -31, 10, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Aluminum Bat (Rotates across strike zone when swinging!)
+            ctx.save();
+            ctx.translate(8, -12);
+            const angle = swingAnim > 0 ? -0.6 + swingAnim * 2.5 : -0.75;
+            ctx.rotate(angle);
+            const batGrad = ctx.createLinearGradient(0, 0, 46, 0);
+            batGrad.addColorStop(0, '#94a3b8');
+            batGrad.addColorStop(0.5, '#f8fafc');
+            batGrad.addColorStop(1, '#cbd5e1');
+            ctx.fillStyle = batGrad;
+            ctx.beginPath();
+            ctx.roundRect(0, -3, 46, 6, 3);
+            ctx.fill();
+            ctx.restore();
+
+            ctx.restore();
+        }
+
+        function drawFieldInPlayView(w, h) {
+            const ip = gameState.inPlay;
+            const opp = OPPONENTS[gameState.opponentKey];
+
+            // 1. Deep Emerald Outfield Grass with Mowed Stripes
+            ctx.fillStyle = '#15803d';
+            ctx.fillRect(0, 0, w, h);
+
+            ctx.fillStyle = '#16a34a';
+            for (let i = 0; i < 10; i += 2) {
+                ctx.fillRect((w / 10) * i, 0, w / 10, h);
+            }
+
+            // Outfield Fence Arc
+            const homeX = w * 0.5;
+            const homeY = h * 0.86;
+            const fenceR = Math.min(w * 0.46, h * 0.76);
+
+            ctx.strokeStyle = '#14532d';
+            ctx.lineWidth = 14;
+            ctx.beginPath();
+            ctx.arc(homeX, homeY, fenceR, Math.PI * 1.22, Math.PI * 1.78);
+            ctx.stroke();
+
+            ctx.strokeStyle = '#facc15';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(homeX, homeY, fenceR - 6, Math.PI * 1.22, Math.PI * 1.78);
+            ctx.stroke();
+
+            // 2. Iconic Kurotsuchi (Black Dirt) Infield Diamond
+            const baseDist = fenceR * 0.44;
+            const firstX = homeX + baseDist * 0.72;
+            const firstY = homeY - baseDist * 0.68;
+            const secondX = homeX;
+            const secondY = homeY - baseDist * 1.36;
+            const thirdX = homeX - baseDist * 0.72;
+            const thirdY = homeY - baseDist * 0.68;
+
+            ctx.fillStyle = '#3f3835';
+            ctx.beginPath();
+            ctx.arc(homeX, homeY - baseDist * 0.62, baseDist * 0.92, Math.PI * 1.18, Math.PI * 1.82);
+            ctx.lineTo(homeX + 35, homeY + 12);
+            ctx.lineTo(homeX - 35, homeY + 12);
+            ctx.closePath();
+            ctx.fill();
+
+            // Inner Grass Cutout
+            ctx.fillStyle = '#16a34a';
+            ctx.beginPath();
+            ctx.moveTo(homeX, homeY - 14);
+            ctx.lineTo(firstX - 14, firstY);
+            ctx.lineTo(secondX, secondY + 14);
+            ctx.lineTo(thirdX + 14, thirdY);
+            ctx.closePath();
+            ctx.fill();
+
+            // Foul Lines
+            ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.moveTo(homeX, homeY);
+            ctx.lineTo(homeX - fenceR * 0.75, homeY - fenceR * 0.66);
+            ctx.moveTo(homeX, homeY);
+            ctx.lineTo(homeX + fenceR * 0.75, homeY - fenceR * 0.66);
+            ctx.stroke();
+
+            // Bases & Mound
+            ctx.fillStyle = '#ffffff';
+            [[firstX, firstY], [secondX, secondY], [thirdX, thirdY], [homeX, homeY]].forEach(([bx, by]) => {
+                ctx.fillRect(bx - 5, by - 5, 10, 10);
+            });
+
+            // 3. Fielders & Baserunners Animation
+            const defColor = ip.isPlayerBatting ? opp.color : gameState.teamColor;
+            const offColor = ip.isPlayerBatting ? gameState.teamColor : opp.color;
+
+            const t = Math.min(1, ip.timer / ip.duration);
+            const ballGroundX = w * (ip.ballStartX + (ip.ballEndX - ip.ballStartX) * Math.min(1, t * 1.35));
+            const ballGroundY = h * (ip.ballStartY + (ip.ballEndY - ip.ballStartY) * Math.min(1, t * 1.35));
+            const arcZ = Math.sin(Math.min(1, t * 1.35) * Math.PI) * ip.maxArcHeight;
+
+            // 9 Fielders (closest fielder chases the ball!)
+            const fielders = [
+                [homeX, homeY - baseDist * 0.68], // P
+                [firstX - 10, firstY - 22],      // 1B
+                [secondX + 26, secondY + 12],    // 2B
+                [thirdX + 10, thirdY - 22],      // 3B
+                [secondX - 26, secondY + 12],    // SS
+                [homeX - fenceR * 0.42, homeY - fenceR * 0.62], // LF
+                [homeX, homeY - fenceR * 0.76],                 // CF
+                [homeX + fenceR * 0.42, homeY - fenceR * 0.62]  // RF
+            ];
+
+            let closestIdx = 0, minDist = 99999;
+            fielders.forEach(([fx, fy], idx) => {
+                const d = Math.hypot(fx - ballGroundX, fy - ballGroundY);
+                if (d < minDist) { minDist = d; closestIdx = idx; }
+            });
+
+            fielders.forEach(([fx, fy], idx) => {
+                let drawX = fx, drawY = fy;
+                if (idx === closestIdx && !ip.isHR) {
+                    drawX = fx + (ballGroundX - fx) * Math.min(1, t * 1.4);
+                    drawY = fy + (ballGroundY - fy) * Math.min(1, t * 1.4);
+                }
+                ctx.fillStyle = defColor;
+                ctx.beginPath();
+                ctx.arc(drawX, drawY, 6.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+            });
+
+            // Batter-Runner sprinting to 1st (and beyond on extra-base hits!)
+            const runnerAngle = Math.min(1, t * 1.2);
+            const rx = homeX + (firstX - homeX) * runnerAngle;
+            const ry = homeY + (firstY - homeY) * runnerAngle;
+            ctx.fillStyle = offColor;
+            ctx.beginPath();
+            ctx.arc(rx, ry, 7, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#fbbf24';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // 4. Ball & Shadow on Field
+            ctx.fillStyle = 'rgba(0,0,0,0.35)';
+            ctx.beginPath();
+            ctx.ellipse(ballGroundX, ballGroundY, 5, 2.5, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(ballGroundX, ballGroundY - arcZ, 5.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 5. Outcome Overlay Callout inside Field View
+            if (t > 0.55) {
+                ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+                ctx.beginPath();
+                ctx.roundRect(w * 0.5 - 150, 18, 300, 56, 14);
+                ctx.fill();
+                ctx.strokeStyle = ip.isHit ? '#fbbf24' : '#94a3b8';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                ctx.fillStyle = ip.isHit ? '#fbbf24' : '#f8fafc';
+                ctx.font = 'bold 20px "Noto Sans KR", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(ip.outcomeText, w * 0.5, 44);
+
+                ctx.fillStyle = '#cbd5e1';
+                ctx.font = '12px "Noto Sans KR", sans-serif';
+                ctx.fillText(ip.outcomeSub, w * 0.5, 63);
+            }
+        }
+
+        /**
+         * ============================================================================
+         * 8. MAIN ANIMATION LOOP & INPUT BINDINGS
+         * ============================================================================
+         */
+        let lastFrameTime = performance.now();
+        const keysDown = {};
+
+        function gameLoop(now) {
+            const dt = Math.min(0.05, (now - lastFrameTime) / 1000);
+            lastFrameTime = now;
+
+            if (!document.getElementById('game-screen').classList.contains('hidden')) {
+                updateSimulation(dt);
+                const rect = canvas.parentElement.getBoundingClientRect();
+                if (gameState.viewMode === 'duel') {
+                    drawDuelView(rect.width, rect.height);
+                } else {
+                    drawFieldInPlayView(rect.width, rect.height);
+                }
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function updateSimulation(dt) {
+            // Keyboard cursor movement for Batting
+            if (gameState.isTop && gameState.viewMode === 'duel') {
+                const moveSpeed = 1.25 * dt;
+                if (keysDown['ArrowLeft'] || keysDown['KeyA']) gameState.cursorX = Math.max(-0.15, gameState.cursorX - moveSpeed);
+                if (keysDown['ArrowRight'] || keysDown['KeyD']) gameState.cursorX = Math.min(1.15, gameState.cursorX + moveSpeed);
+                if (keysDown['ArrowUp'] || keysDown['KeyW']) gameState.cursorY = Math.max(-0.15, gameState.cursorY - moveSpeed);
+                if (keysDown['ArrowDown'] || keysDown['KeyS']) gameState.cursorY = Math.min(1.15, gameState.cursorY + moveSpeed);
+            }
+
+            // Batter Swing Animation decay
+            if (gameState.batterSwingAnim > 0) {
+                gameState.batterSwingAnim += dt * 4.5;
+                if (gameState.batterSwingAnim >= 1) gameState.batterSwingAnim = 0;
+            }
+
+            // Pitching Timing Bar Oscillation
+            if (gameState.phase === 'pitch_timing') {
+                gameState.timingPos += gameState.timingDir * dt * 1.45;
+                if (gameState.timingPos >= 1) {
+                    gameState.timingPos = 1;
+                    gameState.timingDir = -1;
+                } else if (gameState.timingPos <= 0) {
+                    gameState.timingPos = 0;
+                    gameState.timingDir = 1;
+                }
+                document.getElementById('timing-needle').style.left = `${gameState.timingPos * 100}%`;
+            }
+
+            // Ball Flight to Home Plate
+            if (gameState.phase === 'pitch_flight' && gameState.ball.active) {
+                const b = gameState.ball;
+                const flightRate = (b.speedKmh / 140) * 1.18;
+                b.progress += dt * flightRate;
+
+                // AI batter swings right around progress 0.91 when player is pitching
+                if (!gameState.isTop && b.progress >= 0.92) {
+                    b.active = false;
+                    resolveAiBatterAgainstPlayerPitch();
+                    return;
+                }
+
+                // Taken pitch (Batter didn't swing)
+                if (gameState.isTop && b.progress >= 1.06) {
+                    b.active = false;
+                    gameState.phase = 'idle';
+                    const pitchNames = { fastball: '직구', slider: '슬라이더', curve: '커브', fork: '포크볼' };
+                    updatePitchRadar(b.speedKmh, pitchNames[b.type]);
+                    audio.playMittPop(b.speedKmh / 140);
+                    resolveStealIfAny(false);
+
+                    if (b.isStrike) {
+                        gameState.strikes++;
+                        addCommentary(`스트라이크! 한가운데 꽂히는 ${b.speedKmh}km/h ${pitchNames[b.type]}를 지켜봅니다.`, 'normal');
+                        if (gameState.strikes >= 3) {
+                            audio.playBrassFanfare('strikeout');
+                            addCommentary(`루킹 삼진 아웃! 타자가 미처 반응하지 못했습니다.`, 'danger');
+                            recordOut();
+                            return;
+                        }
+                    } else {
+                        gameState.balls++;
+                        addCommentary(`볼! 유인구를 잘 골라냅니다. (볼 ${gameState.balls})`, 'info');
+                        if (gameState.balls >= 4) {
+                            addCommentary(`볼넷 출루! 선구안으로 1루를 밟습니다!`, 'highlight');
+                            advanceRunnersOnWalk();
+                            return;
+                        }
+                    }
+                    updateHUD();
+                }
+            }
+
+            // In-Play Diamond Animation
+            if (gameState.phase === 'in_play' && gameState.viewMode === 'field') {
+                gameState.inPlay.timer += dt;
+                if (gameState.inPlay.timer >= gameState.inPlay.duration) {
+                    finishInPlayResolution();
+                }
+            }
+        }
+
+        function initGameControls() {
+            // Pointer move / tap on Canvas for Batting Meet Cursor or Pitching Target
+            function handleCanvasPointer(clientX, clientY, isClick) {
+                if (gameState.viewMode !== 'duel') return;
+                const rect = canvas.getBoundingClientRect();
+                const px = clientX - rect.left;
+                const py = clientY - rect.top;
+
+                if (strikeZoneRect.w > 0) {
+                    const normX = Math.max(-0.2, Math.min(1.2, (px - strikeZoneRect.x) / strikeZoneRect.w));
+                    const normY = Math.max(-0.2, Math.min(1.2, (py - strikeZoneRect.y) / strikeZoneRect.h));
+
+                    if (gameState.isTop) {
+                        gameState.cursorX = normX;
+                        gameState.cursorY = normY;
+                        if (isClick && gameState.phase === 'pitch_flight') {
+                            executePlayerSwing();
+                        }
+                    } else if (gameState.phase === 'idle') {
+                        gameState.targetZoneX = normX;
+                        gameState.targetZoneY = normY;
+                    }
+                }
+            }
+
+            canvas.addEventListener('mousemove', e => handleCanvasPointer(e.clientX, e.clientY, false));
+            canvas.addEventListener('mousedown', e => handleCanvasPointer(e.clientX, e.clientY, true));
+            canvas.addEventListener('touchmove', e => {
+                if (e.touches.length > 0) {
+                    handleCanvasPointer(e.touches[0].clientX, e.touches[0].clientY, false);
+                }
+            }, { passive: true });
+            canvas.addEventListener('touchstart', e => {
+                if (e.touches.length > 0) {
+                    handleCanvasPointer(e.touches[0].clientX, e.touches[0].clientY, true);
+                }
+            }, { passive: true });
+
+            // Keyboard Controls
+            window.addEventListener('keydown', e => {
+                keysDown[e.code] = true;
+                if (e.code === 'Space') {
+                    if (document.getElementById('game-screen').classList.contains('hidden')) return;
+                    e.preventDefault();
+                    if (gameState.isTop) {
+                        executePlayerSwing();
+                    } else {
+                        if (gameState.phase === 'idle') startPlayerPitchSequence();
+                        else if (gameState.phase === 'pitch_timing') lockPlayerPitchTiming();
+                    }
+                }
+            });
+            window.addEventListener('keyup', e => {
+                keysDown[e.code] = false;
+            });
+
+            // Batting Swing Mode Buttons
+            document.querySelectorAll('.swing-mode-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.swing-mode-btn').forEach(b => {
+                        b.classList.remove('border-2', 'border-amber-400', 'bg-amber-400/20', 'text-white');
+                        b.classList.add('border', 'border-slate-700', 'bg-slate-800/80', 'text-slate-300');
+                    });
+                    btn.classList.remove('border', 'border-slate-700', 'bg-slate-800/80', 'text-slate-300');
+                    btn.classList.add('border-2', 'border-amber-400', 'bg-amber-400/20', 'text-white');
+                    gameState.swingMode = btn.dataset.swingmode;
+                });
+            });
+
+            // Steal Button
+            document.getElementById('steal-btn').addEventListener('click', () => {
+                const canSteal = (gameState.bases[0] && !gameState.bases[1]) || (gameState.bases[1] && !gameState.bases[2]);
+                if (!canSteal) return;
+                gameState.stealRequested = !gameState.stealRequested;
+                updateHUD();
+            });
+
+            // Request Pitch & Swing Buttons
+            document.getElementById('request-pitch-btn').addEventListener('click', triggerAiPitch);
+            document.getElementById('swing-btn').addEventListener('click', executePlayerSwing);
+
+            // Pitch Type Buttons
+            document.querySelectorAll('.pitch-type-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.pitch-type-btn').forEach(b => {
+                        b.classList.remove('border-2', 'border-amber-400', 'bg-amber-400/20', 'text-white');
+                        b.classList.add('border', 'border-slate-700', 'bg-slate-800/80', 'text-slate-300');
+                    });
+                    btn.classList.remove('border', 'border-slate-700', 'bg-slate-800/80', 'text-slate-300');
+                    btn.classList.add('border-2', 'border-amber-400', 'bg-amber-400/20', 'text-white');
+                    gameState.selectedPitchType = btn.dataset.pitch;
+                });
+            });
+
+            // Pitch Throw / Timing Lock Button
+            document.getElementById('throw-pitch-btn').addEventListener('click', () => {
+                if (gameState.phase === 'idle') startPlayerPitchSequence();
+                else if (gameState.phase === 'pitch_timing') lockPlayerPitchTiming();
+            });
+
+            // Relief Pitcher Button
+            document.getElementById('relieve-pitcher-btn').addEventListener('click', () => {
+                if (gameState.pitcherRelieved) {
+                    addCommentary('이미 구원 투수가 마운드에 올라와 있습니다.', 'info');
+                    return;
+                }
+                gameState.pitcherRelieved = true;
+                gameState.playerPitcherName = '구원 에이스 후루야';
+                gameState.pitcherStamina = 100;
+                addCommentary('🔄 투수 교대! 강속구 구원 투수 후루야가 마운드에 오릅니다!', 'highlight');
+                showBanner('PITCHER CHANGE', '투수 교대!', '구원 에이스 후루야 마운드 등판!', 1500);
+                updateHUD();
+            });
+
+            // Fighting Spirit Special Buttons
+            document.getElementById('bat-spirit-btn').addEventListener('click', () => {
+                if (gameState.spirit >= 100) {
+                    gameState.spiritActive = !gameState.spiritActive;
+                    if (gameState.spiritActive) {
+                        audio.playBrassFanfare('hit');
+                        addCommentary('⚡ 클러치 집중 모드 발동! 미트 크기와 장타력이 극대화됩니다!', 'highlight');
+                    }
+                    updateHUD();
+                }
+            });
+
+            document.getElementById('pitch-spirit-btn').addEventListener('click', () => {
+                if (gameState.spirit >= 100) {
+                    gameState.spiritActive = !gameState.spiritActive;
+                    if (gameState.spiritActive) {
+                        // Automatically select fastball for Fireball pitch
+                        gameState.selectedPitchType = 'fastball';
+                        document.querySelectorAll('.pitch-type-btn').forEach((b, i) => {
+                            if (i === 0) {
+                                b.classList.add('border-2', 'border-amber-400', 'bg-amber-400/20', 'text-white');
+                                b.classList.remove('border', 'border-slate-700', 'bg-slate-800/80', 'text-slate-300');
+                            } else {
+                                b.classList.remove('border-2', 'border-amber-400', 'bg-amber-400/20', 'text-white');
+                                b.classList.add('border', 'border-slate-700', 'bg-slate-800/80', 'text-slate-300');
+                            }
+                        });
+                        audio.playBrassFanfare('strikeout');
+                        addCommentary('🔥 혼신의 불꽃 직구 장전! 포심 직구 구속이 폭발적으로 상승합니다!', 'highlight');
+                    }
+                    updateHUD();
+                }
+            });
+
+            // Mute Button
+            document.getElementById('mute-btn').addEventListener('click', () => {
+                const muted = audio.toggleMute();
+                document.getElementById('mute-icon').textContent = muted ? '🔇' : '🔊';
+            });
+
+            // Line Score Modal
+            document.getElementById('linescore-btn').addEventListener('click', openLineScoreModal);
+            document.getElementById('close-linescore-btn').addEventListener('click', () => {
+                document.getElementById('linescore-modal').classList.add('hidden');
+            });
+
+            // Ending Buttons
+            document.getElementById('rematch-btn').addEventListener('click', startMatch);
+            document.getElementById('back-to-menu-btn').addEventListener('click', () => {
+                document.getElementById('ending-screen').classList.add('hidden');
+                document.getElementById('game-screen').classList.add('hidden');
+                document.getElementById('setup-screen').classList.remove('hidden');
+            });
+
+            window.addEventListener('resize', resizeCanvas);
+        }
+
+        function openLineScoreModal() {
+            const opp = OPPONENTS[gameState.opponentKey];
+            const header = document.getElementById('linescore-header');
+            const body = document.getElementById('linescore-body');
+
+            const maxInn = Math.max(gameState.regEndInning, gameState.inning);
+            let hHtml = '<th class="py-2 px-2 text-left">학교명</th>';
+            for (let i = 1; i <= maxInn; i++) {
+                hHtml += `<th class="py-2 px-1.5">${i}</th>`;
+            }
+            hHtml += '<th class="py-2 px-2 font-black text-amber-300">R</th><th class="py-2 px-2 font-black">H</th>';
+            header.innerHTML = hHtml;
+
+            let awayRow = `<td class="py-2 px-2 text-left text-white">${gameState.schoolName}</td>`;
+            let homeRow = `<td class="py-2 px-2 text-left text-slate-300">${opp.name}</td>`;
+
+            for (let i = 1; i <= maxInn; i++) {
+                const aVal = gameState.inningScores.away[i] !== undefined ? gameState.inningScores.away[i] : '-';
+                const hVal = gameState.inningScores.home[i] !== undefined ? gameState.inningScores.home[i] : '-';
+                awayRow += `<td class="py-2 px-1.5 text-slate-200">${aVal}</td>`;
+                homeRow += `<td class="py-2 px-1.5 text-slate-400">${hVal}</td>`;
+            }
+
+            awayRow += `<td class="py-2 px-2 font-black text-amber-300">${gameState.awayScore}</td><td class="py-2 px-2">${gameState.awayHits}</td>`;
+            homeRow += `<td class="py-2 px-2 font-black text-white">${gameState.homeScore}</td><td class="py-2 px-2">${gameState.homeHits}</td>`;
+
+            body.innerHTML = `<tr>${awayRow}</tr><tr>${homeRow}</tr>`;
+
+            document.getElementById('stat-hits-hr').textContent = `${gameState.awayHits}안타 / ${gameState.stats.hrs}홈런`;
+            document.getElementById('stat-so').textContent = `${gameState.stats.strikeouts}개`;
+            document.getElementById('stat-max-speed').textContent = `${gameState.stats.maxPitchSpeed || '---'} km/h`;
+
+            document.getElementById('linescore-modal').classList.remove('hidden');
+        }
+
+        // Initialize App on Load
+        window.addEventListener('DOMContentLoaded', () => {
+            initSetupUI();
+            initGameControls();
+            requestAnimationFrame(gameLoop);
+        });
+    </script>
 </body>
 </html>
