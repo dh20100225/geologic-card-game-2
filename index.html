@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>여름의 고시엔 3D - 토스 배팅 에디션</title>
+    <title>여름의 고시엔 3D 고교야구 시뮬레이터</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Three.js r128 from cdnjs with unpkg fallback -->
+    <!-- Three.js r128 with unpkg fallback -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"
             onerror="var s=document.createElement('script');s.src='https://unpkg.com/three@0.128.0/build/three.min.js';document.head.appendChild(s);"></script>
-    <!-- Korean Display & UI Fonts -->
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@500;700;900&display=swap" rel="stylesheet">
@@ -27,7 +27,7 @@
             user-select: none;
             -webkit-user-select: none;
             font-family: 'Noto Sans KR', sans-serif;
-            background: #1d4ed8;
+            background: #1e3a8a;
         }
         .font-display {
             font-family: 'Black Han Sans', sans-serif;
@@ -48,12 +48,12 @@
         }
         @keyframes judgePop {
             0% { transform: translate(-50%, -45%) scale(0.5); opacity: 0; }
-            18% { transform: translate(-50%, -65%) scale(1.18); opacity: 1; }
-            80% { transform: translate(-50%, -85%) scale(1.0); opacity: 1; }
-            100% { transform: translate(-50%, -105%) scale(0.95); opacity: 0; }
+            18% { transform: translate(-50%, -68%) scale(1.16); opacity: 1; }
+            82% { transform: translate(-50%, -88%) scale(1.0); opacity: 1; }
+            100% { transform: translate(-50%, -108%) scale(0.95); opacity: 0; }
         }
         .animate-judge {
-            animation: judgePop 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            animation: judgePop 1.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
         @keyframes nextBtnPop {
             0% { transform: translate(-50%, 24px) scale(0.85); opacity: 0; }
@@ -66,7 +66,7 @@
 </head>
 <body class="relative w-screen h-screen overflow-hidden bg-sky-500">
 
-    <!-- ==================== FULL-VIEWPORT 3D KOSHIEN CANVAS ==================== -->
+    <!-- ==================== FULL-VIEWPORT 3D KOSHIEN STADIUM ==================== -->
     <div id="canvas-wrapper" class="relative w-full h-full cursor-pointer">
         <canvas id="three-canvas"></canvas>
 
@@ -77,88 +77,119 @@
             <p id="webgl-error-msg" class="text-xs text-slate-300 max-w-md">브라우저의 WebGL 설정을 확인해 주세요.</p>
         </div>
 
-        <!-- ==================== TOP HUD (MATCHING REFERENCE VIDEO) ==================== -->
-        <div class="pointer-events-none absolute inset-x-0 top-0 z-20 flex flex-col items-center pt-3 sm:pt-5 px-3 sm:px-6">
-            <!-- Top Row: Best Pill Badge (Left) + Mode / Home / Sound Buttons (Right) -->
-            <div class="w-full max-w-5xl flex items-center justify-between gap-2">
-                <!-- Left: Best Distance Pill Badge -->
-                <div class="pointer-events-auto flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900/80 backdrop-blur-md border border-white/25 shadow-lg">
-                    <span class="text-xs sm:text-sm font-extrabold text-amber-300 tracking-tight">Best:</span>
-                    <span id="hud-best-distance" class="text-sm sm:text-base font-black text-white tabular-nums">0.00m</span>
+        <!-- ==================== TOP ARCADE-SIM HUD OVERLAY ==================== -->
+        <div class="pointer-events-none absolute inset-x-0 top-0 z-20 flex flex-col items-center pt-2.5 sm:pt-4 px-2.5 sm:px-5">
+            <!-- Top Row: Left Stats/Controls | Center Live Distance | Right Pitch Selector Pills -->
+            <div class="w-full max-w-7xl flex flex-wrap items-start justify-between gap-2">
+
+                <!-- LEFT: Best Distance Pill + Home Run / Hit Stats + Utility Buttons -->
+                <div class="pointer-events-auto flex flex-col gap-1.5">
+                    <div class="flex items-center gap-1.5 sm:gap-2">
+                        <div class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-slate-950/80 backdrop-blur-md border border-white/25 shadow-lg">
+                            <span class="text-xs sm:text-sm font-extrabold text-amber-300">Best:</span>
+                            <span id="hud-best-distance" class="text-sm sm:text-base font-black text-white tabular-nums">0.00m</span>
+                        </div>
+
+                        <button id="customize-btn" type="button" title="학교 유니폼 & 배트 설정"
+                            class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-sky-500/90 hover:bg-sky-400 border-2 border-white/80 flex items-center justify-center text-white text-sm sm:text-base shadow-lg transition cursor-pointer">
+                            🏠
+                        </button>
+                        <button id="mute-btn" type="button" title="사운드 켜기/끄기"
+                            class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-950/80 hover:bg-slate-800 backdrop-blur-md border border-white/25 flex items-center justify-center text-white text-sm sm:text-base shadow-lg transition cursor-pointer">
+                            <span id="mute-icon">🔊</span>
+                        </button>
+                    </div>
+
+                    <!-- Home Run & Hit Counter Pill -->
+                    <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-950/70 backdrop-blur-md border border-white/15 text-[11px] sm:text-xs font-bold text-slate-200 self-start shadow">
+                        <span id="hud-school-dot" class="w-2.5 h-2.5 rounded-full bg-blue-500 border border-white"></span>
+                        <span id="hud-school-name" class="font-extrabold text-white">세이도 고교</span>
+                        <span class="text-white/30">|</span>
+                        <span class="text-amber-300 font-extrabold">홈런 <span id="hud-hr-count">0</span></span>
+                        <span class="text-sky-300 font-extrabold">안타 <span id="hud-hit-count">0</span></span>
+                    </div>
                 </div>
 
-                <!-- Right: Mode Toggle, Customize/Home Button & Audio Toggle -->
-                <div class="pointer-events-auto flex items-center gap-1.5 sm:gap-2">
-                    <button id="mode-toggle-btn" type="button" title="토스 배팅 / 고시엔 수비연출 전환"
-                        class="px-3 py-1.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 backdrop-blur-md border border-white/25 text-xs sm:text-sm font-extrabold text-sky-300 shadow-lg transition cursor-pointer">
-                        ⚾ <span id="mode-label">토스 배팅</span>
+                <!-- RIGHT: Pitch Type Selector Pills (랜덤 실전 + 6 Pitch Types) -->
+                <div class="pointer-events-auto flex flex-wrap justify-end gap-1 sm:gap-1.5 max-w-[230px] sm:max-w-md">
+                    <button type="button" data-pitch="random"
+                        class="pitch-pill px-2.5 py-1 rounded-full bg-amber-400 text-slate-950 font-black text-[11px] sm:text-xs shadow-md border border-white/70 transition cursor-pointer">
+                        🎲 랜덤 실전
                     </button>
-                    <button id="customize-btn" type="button" title="학교 유니폼 & 설정"
-                        class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-sky-500/90 hover:bg-sky-400 border-2 border-white/80 flex items-center justify-center text-white text-base sm:text-lg shadow-lg transition cursor-pointer">
-                        🏠
+                    <button type="button" data-pitch="four_seam"
+                        class="pitch-pill px-2.5 py-1 rounded-full bg-slate-950/80 hover:bg-slate-800 text-white font-bold text-[11px] sm:text-xs shadow-md border border-white/25 transition cursor-pointer">
+                        직구
                     </button>
-                    <button id="mute-btn" type="button" title="사운드 켜기/끄기"
-                        class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-900/80 hover:bg-slate-800 backdrop-blur-md border border-white/25 flex items-center justify-center text-white text-base sm:text-lg shadow-lg transition cursor-pointer">
-                        <span id="mute-icon">🔊</span>
+                    <button type="button" data-pitch="two_seam"
+                        class="pitch-pill px-2.5 py-1 rounded-full bg-slate-950/80 hover:bg-slate-800 text-white font-bold text-[11px] sm:text-xs shadow-md border border-white/25 transition cursor-pointer">
+                        투심
+                    </button>
+                    <button type="button" data-pitch="slider"
+                        class="pitch-pill px-2.5 py-1 rounded-full bg-slate-950/80 hover:bg-slate-800 text-white font-bold text-[11px] sm:text-xs shadow-md border border-white/25 transition cursor-pointer">
+                        슬라이더
+                    </button>
+                    <button type="button" data-pitch="curve"
+                        class="pitch-pill px-2.5 py-1 rounded-full bg-slate-950/80 hover:bg-slate-800 text-white font-bold text-[11px] sm:text-xs shadow-md border border-white/25 transition cursor-pointer">
+                        커브
+                    </button>
+                    <button type="button" data-pitch="fork"
+                        class="pitch-pill px-2.5 py-1 rounded-full bg-slate-950/80 hover:bg-slate-800 text-white font-bold text-[11px] sm:text-xs shadow-md border border-white/25 transition cursor-pointer">
+                        포크볼
+                    </button>
+                    <button type="button" data-pitch="changeup"
+                        class="pitch-pill px-2.5 py-1 rounded-full bg-slate-950/80 hover:bg-slate-800 text-white font-bold text-[11px] sm:text-xs shadow-md border border-white/25 transition cursor-pointer">
+                        체인지업
                     </button>
                 </div>
             </div>
 
-            <!-- Center: Large Bold Live Distance Counter (`0.00m`) -->
-            <div class="mt-1 sm:mt-2 flex flex-col items-center">
+            <!-- CENTER TOP: Live Distance Counter (`0.00m`) + Pitch / Hit Telemetry Callout Pill -->
+            <div class="mt-1 sm:mt-0.5 flex flex-col items-center">
                 <div id="hud-live-distance"
-                    class="font-black text-5xl sm:text-6xl md:text-7xl text-slate-950 drop-shadow-[0_2px_10px_rgba(255,255,255,0.85)] tabular-nums tracking-tight leading-none">
+                    class="font-black text-4xl sm:text-6xl md:text-7xl text-slate-950 drop-shadow-[0_2px_10px_rgba(255,255,255,0.92)] tabular-nums tracking-tight leading-none">
                     0.00m
                 </div>
-                <!-- Sub-telemetry pill (exit speed & launch angle during flight) -->
-                <div id="hud-telemetry-pill" class="hidden mt-2 px-3.5 py-1 rounded-full bg-slate-950/80 backdrop-blur-md border border-amber-300/60 text-xs sm:text-sm font-bold text-amber-300 shadow">
-                    <span id="hud-telemetry-text">타구 172km/h · 발사각 32°</span>
+                <div id="hud-callout-pill"
+                    class="mt-1.5 px-3.5 py-1 rounded-full bg-slate-950/82 backdrop-blur-md border border-sky-300/60 text-xs sm:text-sm font-extrabold text-sky-300 shadow-lg">
+                    <span id="hud-callout-text">상대 에이스 투수 등판 준비 완료</span>
                 </div>
             </div>
         </div>
 
         <!-- ==================== CENTER PLATE PROMPT ("Tap to Start!" / "Tap to Swing!") ==================== -->
-        <div id="center-prompt" class="pointer-events-none absolute left-1/2 top-[63%] z-20 animate-prompt text-center">
+        <div id="center-prompt" class="pointer-events-none absolute left-1/2 top-[67%] z-20 animate-prompt text-center">
             <div id="center-prompt-main"
-                class="font-black text-2xl sm:text-4xl text-slate-950 drop-shadow-[0_2px_8px_rgba(255,255,255,0.95)] whitespace-nowrap">
+                class="font-black text-2xl sm:text-4xl text-white drop-shadow-[0_3px_10px_rgba(0,0,0,0.95)] whitespace-nowrap">
                 Tap to Start!
             </div>
             <div id="center-prompt-sub"
-                class="mt-1 inline-block px-3 py-0.5 rounded-full bg-slate-950/70 text-white text-[11px] sm:text-xs font-bold backdrop-blur-sm">
-                화면 클릭 / 터치 / SPACE
+                class="mt-1 inline-block px-3 py-0.5 rounded-full bg-slate-950/75 text-amber-300 border border-white/20 text-[11px] sm:text-xs font-bold backdrop-blur-sm">
+                화면 클릭 / 터치 / SPACEBAR
             </div>
         </div>
 
         <!-- ==================== SWING CONTACT JUDGMENT POPUP ==================== -->
-        <div id="judgment-popup" class="hidden pointer-events-none absolute left-1/2 top-[44%] z-30 text-center">
+        <div id="judgment-popup" class="hidden pointer-events-none absolute left-1/2 top-[43%] z-30 text-center">
             <div id="judgment-title" class="font-display text-4xl sm:text-6xl text-amber-300 drop-shadow-[0_4px_14px_rgba(0,0,0,0.95)] whitespace-nowrap">
                 PERFECT!!
             </div>
-            <div id="judgment-sub" class="mt-1 px-3 py-0.5 rounded-full bg-slate-950/80 text-white text-xs sm:text-sm font-bold inline-block">
-                완벽한 스윗스팟!
+            <div id="judgment-sub" class="mt-1 px-3.5 py-0.5 rounded-full bg-slate-950/85 text-white text-xs sm:text-sm font-bold inline-block border border-white/20">
+                완벽한 스윗스팟 홈런 타구!
             </div>
         </div>
 
-        <!-- ==================== BOTTOM-CENTER "Next" BUTTON (MATCHING VIDEO) ==================== -->
+        <!-- ==================== BOTTOM-CENTER "Next" BUTTON ==================== -->
         <button id="next-btn" type="button"
-            class="hidden absolute bottom-8 sm:bottom-11 left-1/2 -translate-x-1/2 z-30 px-12 sm:px-16 py-3.5 sm:py-4 rounded-2xl bg-gradient-to-b from-sky-500 to-blue-700 hover:from-sky-400 hover:to-blue-600 border-2 border-slate-950/80 text-white font-black text-2xl sm:text-3xl shadow-[0_8px_24px_rgba(0,0,0,0.45)] active:scale-95 transition cursor-pointer">
+            class="hidden absolute bottom-8 sm:bottom-11 left-1/2 -translate-x-1/2 z-30 px-12 sm:px-16 py-3.5 sm:py-4 rounded-2xl bg-gradient-to-b from-sky-500 to-blue-700 hover:from-sky-400 hover:to-blue-600 border-2 border-slate-950/80 text-white font-black text-2xl sm:text-3xl shadow-[0_8px_24px_rgba(0,0,0,0.5)] active:scale-95 transition cursor-pointer">
             Next
         </button>
-
-        <!-- ==================== BOTTOM-LEFT SCHOOL & BATTER MINI BADGE ==================== -->
-        <div class="pointer-events-none absolute bottom-3 left-3 z-20 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-slate-950/75 backdrop-blur-md border border-white/20 shadow-lg">
-            <span id="badge-school-color" class="w-4 h-4 rounded-md bg-blue-600 border border-white/70 inline-block"></span>
-            <span id="badge-school-name" class="text-xs font-black text-white">세이도 고교</span>
-            <span class="text-white/30">|</span>
-            <span id="badge-hit-count" class="text-xs font-bold text-amber-300">홈런 0개</span>
-        </div>
     </div>
 
     <!-- ==================== SCHOOL & BAT CUSTOMIZATION MODAL ==================== -->
     <div id="customize-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-40 flex items-center justify-center p-4">
         <div class="w-full max-w-md bg-slate-900 border border-slate-700 rounded-3xl p-5 sm:p-6 shadow-2xl text-slate-100">
             <div class="flex items-center justify-between mb-4">
-                <h2 class="font-display text-2xl text-amber-300">⚾ 고시엔 타자 &amp; 구장 설정</h2>
+                <h2 class="font-display text-2xl text-amber-300">⚾ 고시엔 타자 &amp; 배트 설정</h2>
                 <button id="close-modal-btn" type="button" class="px-3 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm font-bold text-white cursor-pointer">닫기 ✕</button>
             </div>
 
@@ -201,7 +232,7 @@
 
                 <div class="pt-2 border-t border-slate-800 flex items-center justify-between gap-2">
                     <button id="reset-best-btn" type="button" class="px-3 py-2 rounded-xl bg-rose-950/70 hover:bg-rose-900 border border-rose-700/60 text-xs font-bold text-rose-300 cursor-pointer">
-                        최고 기록 초기화
+                        기록 초기화
                     </button>
                     <button id="apply-modal-btn" type="button" class="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-black text-sm shadow-lg cursor-pointer">
                         적용하고 돌아가기
@@ -217,7 +248,7 @@
          * 1. PROCEDURAL WEB AUDIO SYNTHESIZER (NO EXTERNAL SOUND URLS)
          * ============================================================================
          */
-        class KoshienTossAudio {
+        class KoshienAudioEngine {
             constructor() {
                 this.ctx = null;
                 this.muted = false;
@@ -241,24 +272,22 @@
                 this.muted = !this.muted;
                 return this.muted;
             }
-            // Pneumatic Toss Machine Launch Pop
-            playTossLaunch() {
+            playPitchRelease() {
                 const ctx = this.ensureCtx();
                 if (!ctx) return;
                 const now = ctx.currentTime;
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
                 osc.type = 'sine';
-                osc.frequency.setValueAtTime(160, now);
-                osc.frequency.exponentialRampToValueAtTime(420, now + 0.085);
-                gain.gain.setValueAtTime(0.18, now);
+                osc.frequency.setValueAtTime(210, now);
+                osc.frequency.exponentialRampToValueAtTime(520, now + 0.09);
+                gain.gain.setValueAtTime(0.14, now);
                 gain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
                 osc.connect(gain);
                 gain.connect(ctx.destination);
                 osc.start(now);
                 osc.stop(now + 0.12);
             }
-            // Bat Swing Air Swoosh
             playSwingWhoosh() {
                 const ctx = this.ensureCtx();
                 if (!ctx) return;
@@ -266,16 +295,31 @@
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
                 osc.type = 'triangle';
-                osc.frequency.setValueAtTime(320, now);
-                osc.frequency.exponentialRampToValueAtTime(95, now + 0.16);
-                gain.gain.setValueAtTime(0.16, now);
+                osc.frequency.setValueAtTime(340, now);
+                osc.frequency.exponentialRampToValueAtTime(90, now + 0.16);
+                gain.gain.setValueAtTime(0.18, now);
                 gain.gain.exponentialRampToValueAtTime(0.001, now + 0.17);
                 osc.connect(gain);
                 gain.connect(ctx.destination);
                 osc.start(now);
                 osc.stop(now + 0.18);
             }
-            // Crisp Metallic Koshien "KANG!" or Wood Crack scaled by hit quality
+            playCatcherMittPop() {
+                const ctx = this.ensureCtx();
+                if (!ctx) return;
+                const now = ctx.currentTime;
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(175, now);
+                osc.frequency.exponentialRampToValueAtTime(44, now + 0.11);
+                gain.gain.setValueAtTime(0.32, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.13);
+            }
             playBatHit(quality = 1.0, isWood = false) {
                 const ctx = this.ensureCtx();
                 if (!ctx) return;
@@ -284,32 +328,32 @@
                     const osc = ctx.createOscillator();
                     const gain = ctx.createGain();
                     osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(290 + quality * 140, now);
-                    osc.frequency.exponentialRampToValueAtTime(75, now + 0.16);
-                    gain.gain.setValueAtTime(0.36 * (0.6 + quality * 0.4), now);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+                    osc.frequency.setValueAtTime(300 + quality * 150, now);
+                    osc.frequency.exponentialRampToValueAtTime(75, now + 0.17);
+                    gain.gain.setValueAtTime(0.40 * (0.6 + quality * 0.4), now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.19);
                     osc.connect(gain);
                     gain.connect(ctx.destination);
                     osc.start(now);
-                    osc.stop(now + 0.19);
+                    osc.stop(now + 0.20);
                 } else {
-                    [1360, 2720, 4080].forEach((freq, idx) => {
+                    // Authentic Koshien Aluminum Bat "KANG!" harmonic ring
+                    [1380, 2760, 4140].forEach((freq, idx) => {
                         const osc = ctx.createOscillator();
                         const gain = ctx.createGain();
                         osc.type = idx === 0 ? 'triangle' : 'sine';
                         osc.frequency.setValueAtTime(freq * (0.95 + quality * 0.08), now);
-                        osc.frequency.exponentialRampToValueAtTime(freq * 0.86, now + 0.36);
-                        gain.gain.setValueAtTime((0.30 / (idx + 1)) * (0.55 + quality * 0.55), now);
-                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.39);
+                        osc.frequency.exponentialRampToValueAtTime(freq * 0.86, now + 0.38);
+                        gain.gain.setValueAtTime((0.32 / (idx + 1)) * (0.55 + quality * 0.55), now);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.41);
                         osc.connect(gain);
                         gain.connect(ctx.destination);
                         osc.start(now);
-                        osc.stop(now + 0.41);
+                        osc.stop(now + 0.43);
                     });
                 }
             }
-            // Aerodynamic Wind Whoosh during High Ball-Chase Flight
-            playSkyWind(duration = 1.1) {
+            playSkyWind(duration = 1.15) {
                 const ctx = this.ensureCtx();
                 if (!ctx) return;
                 const now = ctx.currentTime;
@@ -324,12 +368,12 @@
                 const filter = ctx.createBiquadFilter();
                 filter.type = 'bandpass';
                 filter.frequency.setValueAtTime(420, now);
-                filter.frequency.linearRampToValueAtTime(780, now + duration * 0.5);
+                filter.frequency.linearRampToValueAtTime(820, now + duration * 0.5);
                 filter.Q.setValueAtTime(1.4, now);
 
                 const gain = ctx.createGain();
                 gain.gain.setValueAtTime(0.005, now);
-                gain.gain.linearRampToValueAtTime(0.09, now + duration * 0.3);
+                gain.gain.linearRampToValueAtTime(0.095, now + duration * 0.3);
                 gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
                 noise.connect(filter);
@@ -337,7 +381,6 @@
                 gain.connect(ctx.destination);
                 noise.start(now);
             }
-            // Koshien Stadium Siren + Brass Fanfare & Crowd Applause on Home Run
             playHomeRunCelebration() {
                 const ctx = this.ensureCtx();
                 if (!ctx) return;
@@ -348,17 +391,17 @@
                 const sGain = ctx.createGain();
                 siren.type = 'sawtooth';
                 siren.frequency.setValueAtTime(260, now);
-                siren.frequency.linearRampToValueAtTime(540, now + 0.5);
-                siren.frequency.linearRampToValueAtTime(470, now + 1.2);
+                siren.frequency.linearRampToValueAtTime(545, now + 0.5);
+                siren.frequency.linearRampToValueAtTime(475, now + 1.25);
                 sGain.gain.setValueAtTime(0.001, now);
                 sGain.gain.linearRampToValueAtTime(0.085, now + 0.25);
-                sGain.gain.exponentialRampToValueAtTime(0.001, now + 1.35);
+                sGain.gain.exponentialRampToValueAtTime(0.001, now + 1.38);
                 siren.connect(sGain);
                 sGain.connect(ctx.destination);
                 siren.start(now);
-                siren.stop(now + 1.4);
+                siren.stop(now + 1.42);
 
-                // 2. Brass Trumpet Riff
+                // 2. Brass Fanfare
                 [523.25, 659.25, 783.99, 1046.5, 987.77, 1046.5].forEach((freq, i) => {
                     const osc = ctx.createOscillator();
                     const gain = ctx.createGain();
@@ -377,8 +420,8 @@
                     osc.stop(now + i * 0.095 + 0.34);
                 });
 
-                // 3. Crowd Applause Noise
-                const dur = 1.9;
+                // 3. Crowd Applause
+                const dur = 1.95;
                 const bufSize = Math.floor(ctx.sampleRate * dur);
                 const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
                 const d = buf.getChannelData(0);
@@ -387,64 +430,137 @@
                 src.buffer = buf;
                 const bp = ctx.createBiquadFilter();
                 bp.type = 'bandpass';
-                bp.frequency.setValueAtTime(820, now);
+                bp.frequency.setValueAtTime(840, now);
                 bp.Q.setValueAtTime(0.7, now);
                 const nGain = ctx.createGain();
                 nGain.gain.setValueAtTime(0.01, now);
-                nGain.gain.linearRampToValueAtTime(0.2, now + 0.2);
+                nGain.gain.linearRampToValueAtTime(0.21, now + 0.2);
                 nGain.gain.exponentialRampToValueAtTime(0.001, now + dur);
                 src.connect(bp);
                 bp.connect(nGain);
                 nGain.connect(ctx.destination);
                 src.start(now);
             }
-            playFielderGlovePop() {
-                const ctx = this.ensureCtx();
-                if (!ctx) return;
-                const now = ctx.currentTime;
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(185, now);
-                osc.frequency.exponentialRampToValueAtTime(48, now + 0.11);
-                gain.gain.setValueAtTime(0.28, now);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.start(now);
-                osc.stop(now + 0.13);
-            }
         }
-        const audio = new KoshienTossAudio();
+        const audio = new KoshienAudioEngine();
 
         /**
          * ============================================================================
-         * 2. GAME STATE & PERSISTENCE
+         * 2. PITCH CATALOG (6 DISTINCT PITCH TYPES WITH 3D MOVEMENT & SPIN VISUALS)
          * ============================================================================
          */
-        const STORAGE_KEY_BEST = 'koshien_toss_batting_best_m_v1';
+        const PITCH_TYPES = {
+            four_seam: {
+                id: 'four_seam',
+                name: '포심 직구',
+                minKmh: 148,
+                maxKmh: 158,
+                breakVec: new THREE.Vector3(0.02, 0.14, 0), // High backspin carry resisting drop
+                breakPower: 2.0,
+                auraColor: 0xef4444,
+                spinAxis: new THREE.Vector3(1, 0, 0),
+                spinRate: -48,
+                desc: '묵직한 구위의 하이 패스트볼'
+            },
+            two_seam: {
+                id: 'two_seam',
+                name: '투심',
+                minKmh: 143,
+                maxKmh: 151,
+                breakVec: new THREE.Vector3(-0.26, -0.18, 0), // Arm-side run toward RHB inside & sink
+                breakPower: 2.2,
+                auraColor: 0xf97316,
+                spinAxis: new THREE.Vector3(0.7, -0.7, 0).normalize(),
+                spinRate: -42,
+                desc: '타자 몸쪽으로 파고드는 투심'
+            },
+            slider: {
+                id: 'slider',
+                name: '슬라이더',
+                minKmh: 132,
+                maxKmh: 141,
+                breakVec: new THREE.Vector3(0.36, -0.18, 0), // Sharp late lateral sweep away from RHB
+                breakPower: 3.1,
+                auraColor: 0x38bdf8,
+                spinAxis: new THREE.Vector3(0.3, 0.95, 0).normalize(),
+                spinRate: 44,
+                desc: '홈플레이트 앞에서 예리하게 휘는 슬라이더'
+            },
+            curve: {
+                id: 'curve',
+                name: '커브',
+                minKmh: 114,
+                maxKmh: 124,
+                breakVec: new THREE.Vector3(0.10, -0.58, 0), // High rainbow loop + 12-to-6 drop
+                breakPower: 2.0,
+                auraColor: 0xa855f7,
+                spinAxis: new THREE.Vector3(-1, 0, 0),
+                spinRate: 38,
+                desc: '큰 낙차의 12-6 폭포수 커브'
+            },
+            fork: {
+                id: 'fork',
+                name: '포크볼',
+                minKmh: 135,
+                maxKmh: 144,
+                breakVec: new THREE.Vector3(0.02, -0.48, 0), // Late sharp vertical drop before plate
+                breakPower: 3.4,
+                auraColor: 0x10b981,
+                spinAxis: new THREE.Vector3(-1, 0, 0),
+                spinRate: 18,
+                desc: '타자 앞에서 뚝 떨어지는 결정구 포크볼'
+            },
+            changeup: {
+                id: 'changeup',
+                name: '체인지업',
+                minKmh: 122,
+                maxKmh: 131,
+                breakVec: new THREE.Vector3(-0.22, -0.26, 0), // Deceptive slower speed + arm-side fade
+                breakPower: 2.3,
+                auraColor: 0xfacc15,
+                spinAxis: new THREE.Vector3(0.6, -0.8, 0).normalize(),
+                spinRate: -28,
+                desc: '타이밍을 뺏는 서클 체인지업'
+            }
+        };
+        const PITCH_KEYS = Object.keys(PITCH_TYPES);
+
+        /**
+         * ============================================================================
+         * 3. GAME STATE & PERSISTENCE
+         * ============================================================================
+         */
+        const STORAGE_KEY_BEST = 'koshien_live_pitch_best_m_v1';
 
         const state = {
             schoolName: '세이도 고교',
             capEmblem: 'S',
             teamColor: '#2563eb',
             batType: 'metal', // 'metal' | 'wood'
-            gameMode: 'toss', // 'toss' | 'defense'
+            selectedPitchFilter: 'random', // 'random' or key in PITCH_TYPES
 
             bestDistance: 0,
             homeRunCount: 0,
+            hitCount: 0,
             currentDistance: 0,
 
-            // Phase: 'ready_start' | 'toss_flight' | 'ball_flight' | 'result_ready'
+            // Phase: 'ready_start' | 'pitch_windup' | 'pitch_flight' | 'ball_flight' | 'result_ready'
             phase: 'ready_start',
 
-            // Toss Machine Arc Physics
-            toss: {
+            // Pitcher Windup & Live Pitch Trajectory
+            pitch: {
                 timer: 0,
-                duration: 0.90,
-                startPos: new THREE.Vector3(0.62, 0.56, 0.02),
-                vel: new THREE.Vector3(0, 0, 0),
-                machineRecoil: 0
+                windupDuration: 0.96,
+                flightTimer: 0,
+                flightDuration: 0.44,
+                spec: PITCH_TYPES.four_seam,
+                speedKmh: 152,
+                startPos: new THREE.Vector3(-0.22, 1.48, -17.1),
+                targetPos: new THREE.Vector3(0.0, 0.88, 0.0),
+                vel0: new THREE.Vector3(),
+                prevPos: new THREE.Vector3(),
+                passedPlate: false,
+                postPlateTimer: 0
             },
 
             // Batter Swing Animation & Contact Window
@@ -458,26 +574,17 @@
             // Struck Ball 3D Aerodynamic Physics
             flight: {
                 timer: 0,
-                pos: new THREE.Vector3(0, 1.05, 0),
+                pos: new THREE.Vector3(0, 0.92, 0),
                 vel: new THREE.Vector3(0, 0, 0),
-                spinRate: 2200, // rpm backspin
+                spinRate: 2400, // rpm backspin
                 bounces: 0,
                 landed: false,
                 isHomeRun: false,
                 hrCelebrated: false,
+                isFoul: false,
                 exitVelKmh: 0,
                 launchAngleDeg: 0,
                 trailPoints: []
-            },
-
-            // Optional Koshien Defense Fielders Simulation ('defense' mode)
-            defense: {
-                retrieverIdx: 7,
-                ballFielded: false,
-                relayInFlight: false,
-                relayProgress: 0,
-                relayStart: new THREE.Vector3(),
-                relayEnd: new THREE.Vector3(0, 0.9, -38.8)
             },
 
             hitstopTimer: 0,
@@ -503,34 +610,23 @@
 
         /**
          * ============================================================================
-         * 3. THREE.JS KOSHIEN STADIUM, CONCENTRIC DISTANCE ARCS, TOSS MACHINE & SD BATTER
+         * 4. AUTHENTIC HANSHIN KOSHIEN STADIUM 3D ENVIRONMENT (MATCHING PHOTO)
          * ============================================================================
          */
         let scene, camera, renderer;
         let threeReady = false;
-        let batter3D, tossMachine3D, ballMesh, ballShadowMesh, ribbonMesh, impactRingMesh;
-        let fielders3D = [];
+        let batter3D, pitcher3D, ballMesh, ballAuraMesh, ballShadowMesh, ribbonMesh, impactRingMesh;
+        let strikeZoneGroup, targetRingMesh, shrinkingRingMesh;
         let crowdBodyInstanced, crowdHeadInstanced, crowdPropInstanced;
         let crowdData = [];
-        let cloudsGroup, tossPuffParticles, turfDustParticles, fireworkParticles = [];
+        let cloudsGroup, moundDustParticles, turfDustParticles, sparkParticles, fireworkParticles = [];
         let scoreboardCanvas, scoreboardCtx, scoreboardTexture;
 
-        // Exact 3/4 Side-Behind Home Plate Camera matching the Reference Video (`00:00` - `00:02`)
-        const HOME_CAM_POS = new THREE.Vector3(-0.38, 1.98, 3.45);
-        const HOME_CAM_LOOK = new THREE.Vector3(0.06, 1.02, -2.2);
+        // Classic Daytime Home-Plate View matching `image_ac0d18.jpg`
+        const HOME_CAM_POS = new THREE.Vector3(0.0, 1.88, 4.35);
+        const HOME_CAM_LOOK = new THREE.Vector3(0.0, 1.32, -18.5);
         const camCurrentPos = HOME_CAM_POS.clone();
         const camCurrentLook = HOME_CAM_LOOK.clone();
-
-        const FIELDER_SPOTS = [
-            { pos: 'P',  name: '마츠오',   num: '18', vec: new THREE.Vector3(0.0, 0.25, -18.44) },
-            { pos: '1B', name: '야마오카', num: '3',  vec: new THREE.Vector3(18.5, 0.0, -21.5) },
-            { pos: '2B', name: '시라카와', num: '4',  vec: new THREE.Vector3(9.0, 0.0, -35.8) },
-            { pos: '3B', name: '하라다',   num: '5',  vec: new THREE.Vector3(-18.5, 0.0, -21.5) },
-            { pos: 'SS', name: '나리미야', num: '6',  vec: new THREE.Vector3(-9.0, 0.0, -35.8) },
-            { pos: 'LF', name: '타다노',   num: '7',  vec: new THREE.Vector3(-42.0, 0.0, -68.0) },
-            { pos: 'CF', name: '카미야',   num: '8',  vec: new THREE.Vector3(0.0, 0.0, -86.0) },
-            { pos: 'RF', name: '히라타',   num: '9',  vec: new THREE.Vector3(42.0, 0.0, -68.0) }
-        ];
 
         function getWallRadiusAtAngle(theta) {
             return 95.0 + 23.0 * Math.cos(2 * theta);
@@ -543,10 +639,10 @@
             try {
                 const canvas = document.getElementById('three-canvas');
                 scene = new THREE.Scene();
-                scene.background = new THREE.Color(0x38bdf8);
-                scene.fog = new THREE.FogExp2(0x60a5fa, 0.0018);
+                scene.background = new THREE.Color(0x60a5fa);
+                scene.fog = new THREE.FogExp2(0x93c5fd, 0.0014);
 
-                camera = new THREE.PerspectiveCamera(46, window.innerWidth / window.innerHeight, 0.1, 600);
+                camera = new THREE.PerspectiveCamera(46, window.innerWidth / window.innerHeight, 0.1, 650);
                 camera.position.copy(HOME_CAM_POS);
                 camera.lookAt(HOME_CAM_LOOK);
 
@@ -560,12 +656,12 @@
                 renderer.shadowMap.enabled = true;
                 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-                // Summer Koshien Sunlight + Hemisphere Sky Lighting
-                const hemi = new THREE.HemisphereLight(0xf0f9ff, 0x15803d, 0.88);
+                // Bright Clear Summer Sky & Sunlight
+                const hemi = new THREE.HemisphereLight(0xf0f9ff, 0x292524, 0.92);
                 scene.add(hemi);
 
                 const sun = new THREE.DirectionalLight(0xfffbeb, 1.15);
-                sun.position.set(48, 84, 42);
+                sun.position.set(45, 88, 38);
                 sun.castShadow = true;
                 sun.shadow.mapSize.width = 1024;
                 sun.shadow.mapSize.height = 1024;
@@ -578,10 +674,11 @@
                 sun.shadow.camera.bottom = -d;
                 scene.add(sun);
 
-                buildKoshienFieldAndDistanceArcs();
-                buildHomePlatePlatformAndTossMachine();
-                buildBatterAndFielders();
-                buildBallRibbonAndParticles();
+                buildSkyDomeAndClouds();
+                buildKoshienFieldAndChalkLines();
+                buildKoshienWallsScoreboardAndTowers();
+                buildPitcherAndBatter();
+                buildStrikeZoneAndBallEffects();
 
                 threeReady = true;
                 return true;
@@ -596,6 +693,44 @@
             }
         }
 
+        function buildSkyDomeAndClouds() {
+            // Gradient Summer Sky Dome (deep zenith blue to soft horizon mist matching `image_ac0d18.jpg`)
+            const skyCanvas = document.createElement('canvas');
+            skyCanvas.width = 32;
+            skyCanvas.height = 256;
+            const sCtx = skyCanvas.getContext('2d');
+            const grad = sCtx.createLinearGradient(0, 0, 0, 256);
+            grad.addColorStop(0.0, '#1d4ed8');
+            grad.addColorStop(0.45, '#3b82f6');
+            grad.addColorStop(0.80, '#93c5fd');
+            grad.addColorStop(1.0, '#e0f2fe');
+            sCtx.fillStyle = grad;
+            sCtx.fillRect(0, 0, 32, 256);
+            const skyTex = new THREE.CanvasTexture(skyCanvas);
+
+            const skyDome = new THREE.Mesh(
+                new THREE.SphereGeometry(280, 32, 24),
+                new THREE.MeshBasicMaterial({ map: skyTex, side: THREE.BackSide, depthWrite: false })
+            );
+            scene.add(skyDome);
+
+            // Soft Summer Clouds
+            cloudsGroup = new THREE.Group();
+            const cloudMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.78 });
+            for (let i = 0; i < 9; i++) {
+                const cGroup = new THREE.Group();
+                for (let b = 0; b < 5; b++) {
+                    const puff = new THREE.Mesh(new THREE.SphereGeometry(6 + Math.random() * 4, 10, 8), cloudMat);
+                    puff.scale.set(1.4, 0.55, 1.0);
+                    puff.position.set(b * 5.2, Math.random() * 1.8, (Math.random() - 0.5) * 4.0);
+                    cGroup.add(puff);
+                }
+                cGroup.position.set(-140 + i * 36, 46 + (i % 3) * 7, -165 - (i % 2) * 20);
+                cloudsGroup.add(cGroup);
+            }
+            scene.add(cloudsGroup);
+        }
+
         function createStripedGrassTexture() {
             const c = document.createElement('canvas');
             c.width = 512;
@@ -608,36 +743,28 @@
             const tex = new THREE.CanvasTexture(c);
             tex.wrapS = THREE.RepeatWrapping;
             tex.wrapT = THREE.RepeatWrapping;
-            tex.repeat.set(12, 12);
+            tex.repeat.set(14, 14);
             return tex;
         }
 
-        function createIvyWallTexture() {
+        function createKurotsuchiDirtTexture() {
             const c = document.createElement('canvas');
-            c.width = 1024;
-            c.height = 192;
+            c.width = 512;
+            c.height = 512;
             const ctx = c.getContext('2d');
-            ctx.fillStyle = '#064e3b';
-            ctx.fillRect(0, 0, 1024, 192);
-
-            for (let i = 0; i < 650; i++) {
-                ctx.fillStyle = i % 3 === 0 ? '#15803d' : i % 3 === 1 ? '#166534' : '#047857';
-                ctx.beginPath();
-                ctx.arc(Math.random() * 1024, 22 + Math.random() * 165, 7 + Math.random() * 10, 0, Math.PI * 2);
-                ctx.fill();
+            // Rich volcanic dark black-brown Kurotsuchi soil from `image_ac0d18.jpg`
+            ctx.fillStyle = '#241e1b';
+            ctx.fillRect(0, 0, 512, 512);
+            for (let i = 0; i < 4500; i++) {
+                const v = Math.random();
+                ctx.fillStyle = v < 0.35 ? '#1b1614' : v < 0.75 ? '#2d2622' : '#3a312c';
+                ctx.fillRect(Math.random() * 512, Math.random() * 512, 2, 2);
             }
-
-            ctx.fillStyle = '#ffffff';
-            ctx.font = '900 28px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText('95m', 65, 58);
-            ctx.fillText('118m', 512, 58);
-            ctx.fillText('95m', 959, 58);
-
-            ctx.fillStyle = '#facc15';
-            ctx.fillRect(0, 0, 1024, 16);
-
-            return new THREE.CanvasTexture(c);
+            const tex = new THREE.CanvasTexture(c);
+            tex.wrapS = THREE.RepeatWrapping;
+            tex.wrapT = THREE.RepeatWrapping;
+            tex.repeat.set(10, 10);
+            return tex;
         }
 
         function createDistanceLabelTexture(label) {
@@ -645,11 +772,11 @@
             c.width = 256;
             c.height = 96;
             const ctx = c.getContext('2d');
-            ctx.fillStyle = 'rgba(15, 23, 42, 0.55)';
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.50)';
             ctx.beginPath();
             ctx.roundRect(24, 14, 208, 68, 22);
             ctx.fill();
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.72)';
             ctx.lineWidth = 4;
             ctx.stroke();
 
@@ -661,47 +788,105 @@
             return new THREE.CanvasTexture(c);
         }
 
-        function buildKoshienFieldAndDistanceArcs() {
-            // 1. Striped Natural Outfield Turf
+        function buildKoshienFieldAndChalkLines() {
+            // 1. Lush Green Natural Outfield Turf with Subtle Mowing Stripes
             const grassTex = createStripedGrassTexture();
             const outfield = new THREE.Mesh(
-                new THREE.CircleGeometry(210, 72),
+                new THREE.CircleGeometry(220, 72),
                 new THREE.MeshLambertMaterial({ map: grassTex })
             );
             outfield.rotation.x = -Math.PI / 2;
             outfield.receiveShadow = true;
             scene.add(outfield);
 
-            // 2. Kurotsuchi (Black Volcanic Soil) Infield Apron
-            const kuroMat = new THREE.MeshLambertMaterial({ color: 0x2b2522 });
-            const infieldDirt = new THREE.Mesh(new THREE.CircleGeometry(34.5, 56), kuroMat);
+            // 2. Iconic Full Kurotsuchi Black Volcanic Dirt Infield Apron & Foreground (`image_ac0d18.jpg`)
+            const kuroTex = createKurotsuchiDirtTexture();
+            const kuroMat = new THREE.MeshLambertMaterial({ map: kuroTex });
+
+            // Main infield dirt fan covering home plate foreground, batter's boxes, basepaths & mound
+            const infieldDirt = new THREE.Mesh(new THREE.CircleGeometry(35.5, 64), kuroMat);
             infieldDirt.rotation.x = -Math.PI / 2;
-            infieldDirt.position.set(0, 0.014, -20.5);
+            infieldDirt.position.set(0, 0.012, -19.2);
             infieldDirt.receiveShadow = true;
             scene.add(infieldDirt);
 
-            // Inner Green Grass Diamond
-            const innerGrass = new THREE.Mesh(
-                new THREE.PlaneGeometry(23.2, 23.2),
-                new THREE.MeshLambertMaterial({ color: 0x16a34a })
-            );
-            innerGrass.rotation.x = -Math.PI / 2;
-            innerGrass.rotation.y = Math.PI / 4;
-            innerGrass.position.set(0, 0.02, -19.4);
-            innerGrass.receiveShadow = true;
-            scene.add(innerGrass);
+            // Extended home-plate apron ensuring the foreground behind home plate is rich dark Kurotsuchi soil
+            const homeApron = new THREE.Mesh(new THREE.CircleGeometry(14.5, 48), kuroMat);
+            homeApron.rotation.x = -Math.PI / 2;
+            homeApron.position.set(0, 0.013, 2.2);
+            homeApron.receiveShadow = true;
+            scene.add(homeApron);
 
-            // Pitcher's Mound
-            const mound = new THREE.Mesh(new THREE.CylinderGeometry(1.65, 2.75, 0.25, 32), kuroMat);
-            mound.position.set(0, 0.125, -18.44);
+            // Raised Black-Dirt Pitcher's Mound at 18.44m (`z = -18.44`)
+            const mound = new THREE.Mesh(new THREE.CylinderGeometry(1.75, 2.95, 0.26, 36), kuroMat);
+            mound.position.set(0, 0.13, -18.44);
+            mound.receiveShadow = true;
             scene.add(mound);
 
-            // Bases (1B, 2B, 3B)
+            // White Pitching Rubber on top of Mound
+            const rubber = new THREE.Mesh(
+                new THREE.BoxGeometry(0.62, 0.03, 0.16),
+                new THREE.MeshBasicMaterial({ color: 0xffffff })
+            );
+            rubber.position.set(0, 0.268, -18.44);
+            scene.add(rubber);
+
+            // 3. Crisp White Home Plate, Left/Right Batter's Boxes & Extended Rear Chalk Lines (`image_ac0d18.jpg`)
+            const chalkMat = new THREE.MeshBasicMaterial({ color: 0xf8fafc });
+
+            // Pentagon Home Plate at (0, 0.018, 0)
+            const hpShape = new THREE.Shape();
+            hpShape.moveTo(-0.215, 0.0);
+            hpShape.lineTo(0.215, 0.0);
+            hpShape.lineTo(0.215, -0.215);
+            hpShape.lineTo(0.0, -0.43);
+            hpShape.lineTo(-0.215, -0.215);
+            hpShape.closePath();
+            const homePlate = new THREE.Mesh(new THREE.ShapeGeometry(hpShape), chalkMat);
+            homePlate.rotation.x = -Math.PI / 2;
+            homePlate.position.set(0, 0.018, -0.21);
+            scene.add(homePlate);
+
+            // Helper to draw crisp chalk line segments on the ground
+            function addChalkSegment(x1, z1, x2, z2, width = 0.075) {
+                const dx = x2 - x1;
+                const dz = z2 - z1;
+                const len = Math.hypot(dx, dz);
+                const seg = new THREE.Mesh(new THREE.PlaneGeometry(width, len), chalkMat);
+                seg.rotation.x = -Math.PI / 2;
+                seg.rotation.z = -Math.atan2(dx, dz);
+                seg.position.set((x1 + x2) * 0.5, 0.018, (z1 + z2) * 0.5);
+                scene.add(seg);
+            }
+
+            // Left & Right Batter's Boxes + Extended Rear Chalk Lines (matching `image_ac0d18.jpg` foreground!)
+            [-1, 1].forEach(side => {
+                const innerX = side * 0.36;
+                const outerX = side * 1.54;
+                const frontZ = -0.88;
+                const backZ = 0.96;
+
+                // Box outline
+                addChalkSegment(innerX, frontZ, outerX, frontZ, 0.08);
+                addChalkSegment(innerX, backZ, outerX, backZ, 0.08);
+                addChalkSegment(innerX, frontZ, innerX, backZ, 0.08);
+                addChalkSegment(outerX, frontZ, outerX, backZ, 0.08);
+
+                // Iconic extended rear chalk lines extending back toward the camera (`z = 0.96` to `z = 2.75`)
+                addChalkSegment(innerX, backZ, innerX, 2.75, 0.09);
+            });
+
+            // 1st Base & 3rd Base Foul Lines radiating at ±45° from Home Plate
+            [-1, 1].forEach(dir => {
+                addChalkSegment(0, 0, dir * 67.18, -67.18, 0.095);
+            });
+
+            // White 1st, 2nd, 3rd Bases
             const baseMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
             [
-                new THREE.Vector3(19.4, 0.04, -19.4),
-                new THREE.Vector3(0, 0.04, -38.8),
-                new THREE.Vector3(-19.4, 0.04, -19.4)
+                new THREE.Vector3(19.4, 0.035, -19.4),
+                new THREE.Vector3(0.0, 0.035, -38.8),
+                new THREE.Vector3(-19.4, 0.035, -19.4)
             ].forEach(bPos => {
                 const b = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.07, 0.46), baseMat);
                 b.position.copy(bPos);
@@ -709,51 +894,142 @@
                 scene.add(b);
             });
 
-            // Foul Lines (Left & Right)
-            const lineMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 });
-            [-1, 1].forEach(dir => {
-                const foulLine = new THREE.Mesh(new THREE.PlaneGeometry(0.18, 175.0), lineMat);
-                foulLine.rotation.x = -Math.PI / 2;
-                foulLine.rotation.z = dir * (Math.PI / 4);
-                foulLine.position.set(dir * 61.87, 0.028, -61.87);
-                scene.add(foulLine);
-            });
-
-            // 3. CONCENTRIC WHITE DISTANCE ARCS EVERY 20m (20m, 40m, 60m, 80m, 100m, 120m, 140m, 160m)
-            // Exactly replicating the crisp white curved distance rings visible in the reference video!
+            // 4. Subtle Outfield Distance Arc Rings (60m, 80m, 100m, 120m, 140m) for Ball-Chase Reference
             const arcMat = new THREE.MeshBasicMaterial({
                 color: 0xffffff,
                 transparent: true,
-                opacity: 0.78,
+                opacity: 0.48,
                 side: THREE.DoubleSide
             });
-
-            [20, 40, 60, 80, 100, 120, 140, 160].forEach(distM => {
-                const arcGeo = new THREE.RingGeometry(distM - 0.16, distM + 0.16, 96, 1, Math.PI * 0.24, Math.PI * 0.52);
+            [60, 80, 100, 120, 140].forEach(distM => {
+                const arcGeo = new THREE.RingGeometry(distM - 0.14, distM + 0.14, 96, 1, Math.PI * 0.25, Math.PI * 0.50);
                 const arcMesh = new THREE.Mesh(arcGeo, arcMat);
                 arcMesh.rotation.x = -Math.PI / 2;
-                arcMesh.position.set(0, 0.032, 0);
+                arcMesh.position.set(0, 0.024, 0);
                 scene.add(arcMesh);
 
-                // Painted distance marker badge on center-right & center-left of each arc
                 const labelTex = createDistanceLabelTexture(`${distM}m`);
                 const labelMesh = new THREE.Mesh(
-                    new THREE.PlaneGeometry(4.6, 1.75),
-                    new THREE.MeshBasicMaterial({ map: labelTex, transparent: true, depthWrite: false })
+                    new THREE.PlaneGeometry(4.4, 1.65),
+                    new THREE.MeshBasicMaterial({ map: labelTex, transparent: true, opacity: 0.85, depthWrite: false })
                 );
                 labelMesh.rotation.x = -Math.PI / 2;
-                labelMesh.position.set(0, 0.036, -distM);
+                labelMesh.position.set(0, 0.028, -distM);
                 scene.add(labelMesh);
             });
+        }
 
-            // 4. Curved Ivy-Covered Koshien Outfield Wall (95m corners -> 118m center)
-            const ivyTex = createIvyWallTexture();
+        function createIvyWallWithSponsorsTexture() {
+            const c = document.createElement('canvas');
+            c.width = 2048;
+            c.height = 256;
+            const ctx = c.getContext('2d');
+
+            // Dark-green Koshien ivy wall background
+            ctx.fillStyle = '#053b2c';
+            ctx.fillRect(0, 0, 2048, 256);
+
+            // Lush ivy leaves texture across wall
+            for (let i = 0; i < 1400; i++) {
+                ctx.fillStyle = i % 3 === 0 ? '#14532d' : i % 3 === 1 ? '#166534' : '#065f46';
+                ctx.beginPath();
+                ctx.arc(Math.random() * 2048, 18 + Math.random() * 175, 8 + Math.random() * 11, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Yellow top fence line
+            ctx.fillStyle = '#facc15';
+            ctx.fillRect(0, 0, 2048, 14);
+
+            // Distance markers (95m corners, 118m center)
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '900 26px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('95m', 70, 52);
+            ctx.fillText('118m', 1024, 52);
+            ctx.fillText('95m', 1978, 52);
+
+            // Authentic Japanese Koshien Lower Padding Sponsor Boards (`image_ac0d18.jpg`)
+            const sponsors = [
+                { text: 'YKK AP', bg: '#0f172a', fg: '#ffffff' },
+                { text: '田辺三菱製薬', bg: '#064e3b', fg: '#ffffff' },
+                { text: 'at home', bg: '#047857', fg: '#fef08a' },
+                { text: 'SUNSTAR', bg: '#0f172a', fg: '#38bdf8' },
+                { text: 'Panasonic', bg: '#1e3a8a', fg: '#ffffff' },
+                { text: '阪神甲子園球場', bg: '#052e16', fg: '#fde047' },
+                { text: '朝日新聞', bg: '#0f172a', fg: '#ffffff' },
+                { text: 'Kubota', bg: '#065f46', fg: '#38bdf8' },
+                { text: 'Joshin', bg: '#b91c1c', fg: '#fde047' },
+                { text: 'LOTTE', bg: '#991b1b', fg: '#ffffff' },
+                { text: 'YKK AP', bg: '#0f172a', fg: '#ffffff' }
+            ];
+            const boardW = 2048 / sponsors.length;
+            sponsors.forEach((sp, idx) => {
+                const bx = idx * boardW;
+                ctx.fillStyle = sp.bg;
+                ctx.fillRect(bx + 3, 182, boardW - 6, 70);
+                ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(bx + 3, 182, boardW - 6, 70);
+
+                ctx.fillStyle = sp.fg;
+                ctx.font = '900 26px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(sp.text, bx + boardW * 0.5, 218);
+            });
+
+            return new THREE.CanvasTexture(c);
+        }
+
+        function createUpperDeckBillboardsTexture() {
+            const c = document.createElement('canvas');
+            c.width = 2048;
+            c.height = 128;
+            const ctx = c.getContext('2d');
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, 2048, 128);
+
+            const ads = [
+                { text: 'SUZUKI', bg: '#1d4ed8', fg: '#ffffff' },
+                { text: 'わかさ生活', bg: '#0284c7', fg: '#fef08a' },
+                { text: 'ZETT', bg: '#0f172a', fg: '#facc15' },
+                { text: 'ポッキー', bg: '#dc2626', fg: '#ffffff' },
+                { text: '関西ペイント', bg: '#0369a1', fg: '#ffffff' },
+                { text: 'SSK', bg: '#1e293b', fg: '#38bdf8' },
+                { text: 'HANSHIN', bg: '#064e3b', fg: '#fde047' },
+                { text: 'Iwatani', bg: '#0284c7', fg: '#ffffff' },
+                { text: 'SEDIA', bg: '#1e3a8a', fg: '#ffffff' },
+                { text: 'LAWSON', bg: '#0369a1', fg: '#ffffff' },
+                { text: 'カニトップ', bg: '#b91c1c', fg: '#fde047' }
+            ];
+            const w = 2048 / ads.length;
+            ads.forEach((ad, i) => {
+                const x = i * w;
+                ctx.fillStyle = ad.bg;
+                ctx.fillRect(x + 6, 12, w - 12, 104);
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(x + 6, 12, w - 12, 104);
+
+                ctx.fillStyle = ad.fg;
+                ctx.font = '900 28px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(ad.text, x + w * 0.5, 64);
+            });
+            return new THREE.CanvasTexture(c);
+        }
+
+        function buildKoshienWallsScoreboardAndTowers() {
+            // 1. Curved Ivy-Covered Outfield Wall with Japanese Sponsor Padding (`95m` corners -> `118m` center)
+            const ivyTex = createIvyWallWithSponsorsTexture();
             const wallGeo = new THREE.BufferGeometry();
             const positions = [];
             const uvs = [];
             const indices = [];
-            const segs = 72;
-            const wallH = 4.2;
+            const segs = 80;
+            const wallH = 4.3;
 
             for (let i = 0; i <= segs; i++) {
                 const u = i / segs;
@@ -784,97 +1060,207 @@
             );
             scene.add(wallMesh);
 
-            // Tall Yellow Foul Poles
+            // 2. Tiered Dark-Green Koshien Outfield & Alps Grandstands + Upper-Deck Billboards (`image_ac0d18.jpg`)
+            const standGeo = new THREE.BufferGeometry();
+            const sPos = [];
+            const sIdx = [];
+            const standSegs = 64;
+            for (let i = 0; i <= standSegs; i++) {
+                const u = i / standSegs;
+                const theta = -Math.PI * 0.34 + (Math.PI * 0.68) * u;
+                const rInner = getWallRadiusAtAngle(THREE.MathUtils.clamp(theta, -Math.PI * 0.25, Math.PI * 0.25)) + 1.5;
+                const rOuter = rInner + 16.0;
+
+                sPos.push(Math.sin(theta) * rInner, 3.8, -Math.cos(theta) * rInner);
+                sPos.push(Math.sin(theta) * rOuter, 15.5, -Math.cos(theta) * rOuter);
+
+                if (i < standSegs) {
+                    const b = i * 2;
+                    sIdx.push(b, b + 1, b + 2);
+                    sIdx.push(b + 1, b + 3, b + 2);
+                }
+            }
+            standGeo.setAttribute('position', new THREE.Float32BufferAttribute(sPos, 3));
+            standGeo.setIndex(sIdx);
+            standGeo.computeVertexNormals();
+            const grandstands = new THREE.Mesh(
+                standGeo,
+                new THREE.MeshLambertMaterial({ color: 0x132a22, side: THREE.DoubleSide })
+            );
+            scene.add(grandstands);
+
+            // Upper-deck Sponsor Rim Band (`SUZUKI`, `ZETT`, `LAWSON`)
+            const upperTex = createUpperDeckBillboardsTexture();
+            const rimGeo = new THREE.BufferGeometry();
+            const rPos = [];
+            const rUvs = [];
+            const rIdx = [];
+            for (let i = 0; i <= standSegs; i++) {
+                const u = i / standSegs;
+                const theta = -Math.PI * 0.33 + (Math.PI * 0.66) * u;
+                const r = getWallRadiusAtAngle(THREE.MathUtils.clamp(theta, -Math.PI * 0.25, Math.PI * 0.25)) + 17.2;
+                rPos.push(Math.sin(theta) * r, 15.2, -Math.cos(theta) * r);
+                rUvs.push(u, 0);
+                rPos.push(Math.sin(theta) * r, 19.6, -Math.cos(theta) * r);
+                rUvs.push(u, 1);
+
+                if (i < standSegs) {
+                    const b = i * 2;
+                    rIdx.push(b, b + 1, b + 2);
+                    rIdx.push(b + 1, b + 3, b + 2);
+                }
+            }
+            rimGeo.setAttribute('position', new THREE.Float32BufferAttribute(rPos, 3));
+            rimGeo.setAttribute('uv', new THREE.Float32BufferAttribute(rUvs, 2));
+            rimGeo.setIndex(rIdx);
+            rimGeo.computeVertexNormals();
+            const upperRim = new THREE.Mesh(
+                rimGeo,
+                new THREE.MeshBasicMaterial({ map: upperTex, side: THREE.DoubleSide })
+            );
+            scene.add(upperRim);
+
+            // Tall Yellow Foul Poles in Left & Right Corners
             const poleMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
             [-1, 1].forEach(dir => {
-                const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.24, 18, 12), poleMat);
-                pole.position.set(dir * 67.18, 9, -67.18);
+                const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.24, 21, 12), poleMat);
+                pole.position.set(dir * 67.18, 10.5, -67.18);
                 scene.add(pole);
             });
 
-            // 5. Center-Field Koshien Backscreen Scoreboard
+            // 3. Dead-Center Iconic Black-Green Koshien Scoreboard with Clock Tower (`image_ac0d18.jpg`)
             scoreboardCanvas = document.createElement('canvas');
             scoreboardCanvas.width = 640;
             scoreboardCanvas.height = 320;
             scoreboardCtx = scoreboardCanvas.getContext('2d');
             scoreboardTexture = new THREE.CanvasTexture(scoreboardCanvas);
 
-            const boardFrame = new THREE.Mesh(
-                new THREE.BoxGeometry(36, 16.5, 2.6),
-                new THREE.MeshLambertMaterial({ color: 0x064e3b })
-            );
-            boardFrame.position.set(0, 12.5, -122.5);
-            scene.add(boardFrame);
+            const sbGroup = new THREE.Group();
+            sbGroup.position.set(0, 0, -123.5);
 
+            // Main dark-green/black scoreboard housing
+            const mainHousing = new THREE.Mesh(
+                new THREE.BoxGeometry(34, 15.5, 3.0),
+                new THREE.MeshLambertMaterial({ color: 0x0b1f18 })
+            );
+            mainHousing.position.y = 14.5;
+            sbGroup.add(mainHousing);
+
+            // Iconic central clock tower turret on top of the scoreboard
+            const turret = new THREE.Mesh(
+                new THREE.BoxGeometry(7.2, 4.5, 2.8),
+                new THREE.MeshLambertMaterial({ color: 0x0b1f18 })
+            );
+            turret.position.y = 24.0;
+            sbGroup.add(turret);
+
+            const clockFace = new THREE.Mesh(
+                new THREE.CircleGeometry(1.35, 24),
+                new THREE.MeshBasicMaterial({ color: 0xf8fafc })
+            );
+            clockFace.position.set(0, 24.0, 1.45);
+            sbGroup.add(clockFace);
+
+            // Green LED Scoreboard Display
             const boardScreen = new THREE.Mesh(
-                new THREE.PlaneGeometry(33.5, 14.5),
+                new THREE.PlaneGeometry(31.2, 13.4),
                 new THREE.MeshBasicMaterial({ map: scoreboardTexture })
             );
-            boardScreen.position.set(0, 12.5, -121.1);
-            scene.add(boardScreen);
+            boardScreen.position.set(0, 14.5, 1.56);
+            sbGroup.add(boardScreen);
+
+            scene.add(sbGroup);
             update3DScoreboard();
 
-            // 6. Koshien Alps Stands & Animated 3D Spectators
-            const concreteMat = new THREE.MeshLambertMaterial({ color: 0x475569 });
+            // 4. Twin Towering Lattice-Steel Floodlight Towers in Left-Center & Right-Center (`image_ac0d18.jpg`)
             [-1, 1].forEach(side => {
-                const alps = new THREE.Mesh(new THREE.BoxGeometry(58, 12, 18), concreteMat);
-                alps.position.set(side * 42, 6, -34);
-                alps.rotation.y = side * (Math.PI / 4);
-                scene.add(alps);
+                const towerGroup = new THREE.Group();
+                const tx = side * 44.0;
+                const tz = -126.0;
+                towerGroup.position.set(tx, 0, tz);
+                towerGroup.rotation.y = -side * 0.28;
 
-                const rad = side * (Math.PI / 4);
-                for (let row = 0; row < 10; row++) {
-                    const yPos = 1.8 + row * 0.95;
-                    const rowOffset = row * 1.35;
-                    for (let k = -24; k <= 24; k += 1.6) {
-                        const localX = side * (32 + rowOffset);
-                        const localZ = -34;
-                        crowdData.push({
-                            x: localX + k * Math.cos(rad),
-                            y: yPos,
-                            z: localZ + k * Math.sin(rad),
-                            angle: side * (Math.PI / 4),
-                            section: side === 1 ? 'home' : 'away',
-                            phase: k * 0.25 + row * 0.3
-                        });
+                // Steel support legs
+                const steelMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.6, roughness: 0.4 });
+                [-1.4, 1.4].forEach(lx => {
+                    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.55, 39, 8), steelMat);
+                    leg.position.set(lx, 19.5, 0);
+                    towerGroup.add(leg);
+                });
+
+                // Cross-bracing struts
+                for (let y = 10; y <= 34; y += 6) {
+                    const brace = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.35, 0.4), steelMat);
+                    brace.position.set(0, y, 0);
+                    towerGroup.add(brace);
+                }
+
+                // Sponsor banner halfway up the tower (like Asahi / Suntory in `image_ac0d18.jpg`)
+                const banner = new THREE.Mesh(
+                    new THREE.BoxGeometry(4.6, 8.5, 0.6),
+                    new THREE.MeshBasicMaterial({ color: side === -1 ? 0x1d4ed8 : 0xdc2626 })
+                );
+                banner.position.set(0, 26.5, 0.35);
+                towerGroup.add(banner);
+
+                // Large Rectangular Floodlight Bank at Top
+                const bankFrame = new THREE.Mesh(
+                    new THREE.BoxGeometry(11.5, 6.2, 1.2),
+                    new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.5, roughness: 0.4 })
+                );
+                bankFrame.position.set(0, 39.5, 0);
+                towerGroup.add(bankFrame);
+
+                // Glowing floodlight bulbs grid
+                const bulbMat = new THREE.MeshBasicMaterial({ color: 0xf8fafc });
+                for (let r = -2; r <= 2; r++) {
+                    for (let c = -4; c <= 4; c++) {
+                        const bulb = new THREE.Mesh(new THREE.PlaneGeometry(0.85, 0.75), bulbMat);
+                        bulb.position.set(c * 1.15, 39.5 + r * 1.05, 0.65);
+                        towerGroup.add(bulb);
                     }
                 }
+
+                scene.add(towerGroup);
             });
+
+            // 5. Animated Cheering Crowd in Grandstands
+            for (let row = 0; row < 8; row++) {
+                const rDist = 101 + row * 1.8;
+                const yPos = 4.6 + row * 1.25;
+                for (let deg = -54; deg <= 54; deg += 2.6) {
+                    if (Math.abs(deg) < 11) continue; // Leave center batter's eye clear behind scoreboard
+                    const rad = THREE.MathUtils.degToRad(deg);
+                    crowdData.push({
+                        x: Math.sin(rad) * rDist,
+                        y: yPos,
+                        z: -Math.cos(rad) * rDist,
+                        angle: -rad,
+                        section: deg >= 0 ? 'home' : 'away',
+                        phase: deg * 0.15 + row * 0.35
+                    });
+                }
+            }
 
             if (crowdData.length > 0) {
                 crowdBodyInstanced = new THREE.InstancedMesh(
-                    new THREE.CylinderGeometry(0.24, 0.28, 0.55, 8),
+                    new THREE.CylinderGeometry(0.28, 0.32, 0.65, 8),
                     new THREE.MeshLambertMaterial({ color: 0xffffff }),
                     crowdData.length
                 );
                 crowdHeadInstanced = new THREE.InstancedMesh(
-                    new THREE.SphereGeometry(0.21, 8, 8),
+                    new THREE.SphereGeometry(0.24, 8, 8),
                     new THREE.MeshLambertMaterial({ color: 0xfdd5b1 }),
                     crowdData.length
                 );
                 crowdPropInstanced = new THREE.InstancedMesh(
-                    new THREE.BoxGeometry(0.14, 0.34, 0.14),
+                    new THREE.BoxGeometry(0.16, 0.40, 0.16),
                     new THREE.MeshBasicMaterial({ color: 0xffffff }),
                     crowdData.length
                 );
                 scene.add(crowdBodyInstanced, crowdHeadInstanced, crowdPropInstanced);
                 updateSpectatorColors();
             }
-
-            // 7. Summer Cumulus Clouds
-            cloudsGroup = new THREE.Group();
-            const cloudMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 });
-            for (let i = 0; i < 8; i++) {
-                const cGroup = new THREE.Group();
-                for (let b = 0; b < 4; b++) {
-                    const puff = new THREE.Mesh(new THREE.SphereGeometry(5 + Math.random() * 3, 10, 8), cloudMat);
-                    puff.position.set(b * 4.5, Math.random() * 2, (Math.random() - 0.5) * 3.5);
-                    cGroup.add(puff);
-                }
-                cGroup.position.set(-125 + i * 36, 44 + (i % 3) * 6, -150 - (i % 2) * 18);
-                cloudsGroup.add(cGroup);
-            }
-            scene.add(cloudsGroup);
         }
 
         function updateSpectatorColors() {
@@ -899,126 +1285,37 @@
         function update3DScoreboard() {
             if (!scoreboardCtx || !scoreboardTexture) return;
             const ctx = scoreboardCtx;
-            ctx.fillStyle = '#064e3b';
+            ctx.fillStyle = '#041f17';
             ctx.fillRect(0, 0, 640, 320);
 
-            ctx.strokeStyle = '#fbbf24';
-            ctx.lineWidth = 7;
+            ctx.strokeStyle = '#34d399';
+            ctx.lineWidth = 6;
             ctx.strokeRect(10, 10, 620, 300);
 
-            ctx.fillStyle = '#fde047';
+            ctx.fillStyle = '#6ee7b7';
             ctx.font = 'bold 26px sans-serif';
             ctx.textAlign = 'center';
-            ctx.fillText('HANSHIN KOSHIEN TOSS DERBY', 320, 48);
+            ctx.fillText('HANSHIN KOSHIEN STADIUM', 320, 48);
 
             ctx.fillStyle = '#ffffff';
             ctx.font = 'bold 34px sans-serif';
-            ctx.fillText(state.schoolName, 320, 108);
+            ctx.fillText(state.schoolName, 320, 106);
+
+            ctx.fillStyle = '#fde047';
+            ctx.font = '900 44px sans-serif';
+            ctx.fillText(`BEST: ${state.bestDistance.toFixed(2)}m`, 320, 178);
 
             ctx.fillStyle = '#38bdf8';
-            ctx.font = '900 44px sans-serif';
-            ctx.fillText(`BEST: ${state.bestDistance.toFixed(2)}m`, 320, 182);
-
-            ctx.fillStyle = '#fbbf24';
             ctx.font = 'bold 30px sans-serif';
-            ctx.fillText(`HOME RUNS: ${state.homeRunCount}`, 320, 248);
+            ctx.fillText(`HR: ${state.homeRunCount}   |   HITS: ${state.hitCount}`, 320, 246);
 
             scoreboardTexture.needsUpdate = true;
         }
 
         /**
-         * Circular White Home Plate Platform & Angled Black Toss Machine (Matching Video `00:00` - `00:02`)
-         */
-        function buildHomePlatePlatformAndTossMachine() {
-            // Circular White Platform at Home Plate (0, 0, 0)
-            const platGroup = new THREE.Group();
-            const topDisc = new THREE.Mesh(
-                new THREE.CylinderGeometry(2.45, 2.55, 0.12, 48),
-                new THREE.MeshLambertMaterial({ color: 0xf8fafc })
-            );
-            topDisc.position.y = 0.06;
-            topDisc.receiveShadow = true;
-            platGroup.add(topDisc);
-
-            const rimRing = new THREE.Mesh(
-                new THREE.RingGeometry(2.38, 2.52, 48),
-                new THREE.MeshBasicMaterial({ color: 0xcbd5e1, side: THREE.DoubleSide })
-            );
-            rimRing.rotation.x = -Math.PI / 2;
-            rimRing.position.y = 0.122;
-            platGroup.add(rimRing);
-
-            // Pentagon Home Plate on the platform
-            const hpShape = new THREE.Shape();
-            hpShape.moveTo(-0.20, 0.09);
-            hpShape.lineTo(0.20, 0.09);
-            hpShape.lineTo(0.20, -0.09);
-            hpShape.lineTo(0, -0.20);
-            hpShape.lineTo(-0.20, -0.09);
-            hpShape.closePath();
-            const homePlate = new THREE.Mesh(
-                new THREE.ShapeGeometry(hpShape),
-                new THREE.MeshBasicMaterial({ color: 0xe2e8f0 })
-            );
-            homePlate.rotation.x = -Math.PI / 2;
-            homePlate.position.set(-0.08, 0.124, 0.06);
-            platGroup.add(homePlate);
-            scene.add(platGroup);
-
-            // Angled Black Toss Machine on the RIGHT side of the platform (x = +0.76, y = 0.12, z = 0.02)
-            tossMachine3D = new THREE.Group();
-            tossMachine3D.position.set(0.76, 0.12, 0.02);
-
-            const basePlate = new THREE.Mesh(
-                new THREE.BoxGeometry(0.46, 0.06, 0.44),
-                new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.5 })
-            );
-            basePlate.position.y = 0.03;
-            basePlate.castShadow = true;
-            tossMachine3D.add(basePlate);
-
-            // Angled Black Chute Body tilted up-left toward the batter's hitting zone
-            const bodyPivot = new THREE.Group();
-            bodyPivot.position.set(0, 0.24, 0);
-            bodyPivot.rotation.z = 0.42; // tilted up-left toward (-X, +Y)
-
-            const mainBox = new THREE.Mesh(
-                new THREE.BoxGeometry(0.36, 0.42, 0.34),
-                new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.35, metalness: 0.25 })
-            );
-            mainBox.castShadow = true;
-            bodyPivot.add(mainBox);
-
-            // Yellow caution stripe & launch barrel opening
-            const stripe = new THREE.Mesh(
-                new THREE.BoxGeometry(0.37, 0.045, 0.35),
-                new THREE.MeshBasicMaterial({ color: 0xfacc15 })
-            );
-            stripe.position.y = 0.08;
-            bodyPivot.add(stripe);
-
-            const muzzle = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.11, 0.12, 0.14, 16),
-                new THREE.MeshStandardMaterial({ color: 0x030717, roughness: 0.4 })
-            );
-            muzzle.position.y = 0.24;
-            bodyPivot.add(muzzle);
-
-            const statusLed = new THREE.Mesh(
-                new THREE.SphereGeometry(0.025, 10, 10),
-                new THREE.MeshBasicMaterial({ color: 0x34d399 })
-            );
-            statusLed.position.set(0, 0.08, 0.18);
-            bodyPivot.add(statusLed);
-
-            tossMachine3D.add(bodyPivot);
-            tossMachine3D.userData.bodyPivot = bodyPivot;
-            tossMachine3D.userData.statusLed = statusLed;
-            scene.add(tossMachine3D);
-        }
-
-        /**
-         * 2-Head SD PowerPro Character Builder (Pinstripe Koshien Uniform + Bat/Glove)
+         * ============================================================================
+         * 5. 2-HEAD SD POWERPRO PITCHER & BATTER 3D CHARACTERS
+         * ============================================================================
          */
         function createPowerProHeadTexture(hairColor = '#2b1d14') {
             const canvas = document.createElement('canvas');
@@ -1102,22 +1399,22 @@
             return new THREE.CanvasTexture(canvas);
         }
 
-        function createPinstripeUniformTexture(jerseyHex, numberStr = '4', backName = 'YUUKI', emblem = 'S') {
+        function createPinstripeUniformTexture(jerseyHex, numberStr = '4', emblem = 'S', isPinstripe = true) {
             const canvas = document.createElement('canvas');
             canvas.width = 512;
             canvas.height = 256;
             const ctx = canvas.getContext('2d');
 
-            // Crisp White Koshien Pinstripe Base (matching video's pinstripe batter uniform!)
-            ctx.fillStyle = '#f8fafc';
+            ctx.fillStyle = isPinstripe ? '#f8fafc' : jerseyHex;
             ctx.fillRect(0, 0, 512, 256);
 
-            ctx.fillStyle = '#1e293b';
-            for (let x = 6; x < 512; x += 18) {
-                ctx.fillRect(x, 0, 3, 256);
+            if (isPinstripe) {
+                ctx.fillStyle = '#1e293b';
+                for (let x = 6; x < 512; x += 18) {
+                    ctx.fillRect(x, 0, 3, 256);
+                }
             }
 
-            // Collar & Belt
             ctx.fillStyle = jerseyHex;
             ctx.fillRect(0, 0, 512, 32);
             ctx.fillStyle = '#0f172a';
@@ -1125,16 +1422,14 @@
             ctx.fillStyle = '#fbbf24';
             ctx.fillRect(244, 226, 24, 28);
 
-            // Front Chest School Emblem
-            ctx.fillStyle = jerseyHex;
+            ctx.fillStyle = isPinstripe ? jerseyHex : '#ffffff';
             ctx.font = '900 44px sans-serif';
             ctx.textAlign = 'center';
             ctx.fillText(emblem, 224, 116);
 
-            // Back Number
             [0, 512].forEach(bx => {
                 ctx.fillStyle = '#ffffff';
-                ctx.strokeStyle = jerseyHex;
+                ctx.strokeStyle = isPinstripe ? jerseyHex : '#0f172a';
                 ctx.lineWidth = 8;
                 ctx.font = '900 112px sans-serif';
                 ctx.textAlign = 'center';
@@ -1163,7 +1458,7 @@
             return new THREE.CanvasTexture(canvas);
         }
 
-        function createSDCharacter({ jerseyHex = '#2563eb', role = 'batter', numberStr = '4', emblem = 'S' }) {
+        function createSDCharacter({ jerseyHex = '#2563eb', role = 'batter', numberStr = '4', emblem = 'S', isPinstripe = true }) {
             const root = new THREE.Group();
             const sleeveMat = new THREE.MeshLambertMaterial({ color: jerseyHex });
             const pantsMat = new THREE.MeshLambertMaterial({ color: '#f8fafc' });
@@ -1171,7 +1466,7 @@
             const gloveMat = new THREE.MeshStandardMaterial({ color: '#92400e', roughness: 0.55 });
             const batMat = new THREE.MeshStandardMaterial({ color: '#e2e8f0', metalness: 0.78, roughness: 0.2 });
 
-            const uniformTex = createPinstripeUniformTexture(jerseyHex, numberStr, 'KOSHIEN', emblem);
+            const uniformTex = createPinstripeUniformTexture(jerseyHex, numberStr, emblem, isPinstripe);
             const torsoMat = new THREE.MeshLambertMaterial({ map: uniformTex });
 
             const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.28, 0.44, 24), torsoMat);
@@ -1201,7 +1496,7 @@
 
             const headSphere = new THREE.Mesh(
                 new THREE.SphereGeometry(0.36, 28, 22),
-                new THREE.MeshLambertMaterial({ map: createPowerProHeadTexture('#2b1d14') })
+                new THREE.MeshLambertMaterial({ map: createPowerProHeadTexture(role === 'pitcher' ? '#1e293b' : '#2b1d14') })
             );
             headSphere.rotation.y = -Math.PI / 2;
             headSphere.castShadow = true;
@@ -1241,7 +1536,7 @@
             headGroup.add(capGroup);
             root.add(headGroup);
 
-            // Floating Hands + Bat (or Glove for fielders)
+            // Floating Hands + Bat (for batter) or Glove + Held Baseball (for pitcher)
             const leftHandPivot = new THREE.Group();
             leftHandPivot.position.set(-0.34, 0.58, 0.14);
 
@@ -1249,6 +1544,8 @@
             rightHandPivot.position.set(0.34, 0.58, 0.14);
 
             let batMesh = null;
+            let heldBall = null;
+
             if (role === 'batter') {
                 const lHand = new THREE.Mesh(new THREE.SphereGeometry(0.095, 16, 14), skinMat);
                 leftHandPivot.add(lHand);
@@ -1257,17 +1554,29 @@
                 rHand.position.set(-0.18, 0.09, 0.06);
                 rightHandPivot.add(rHand);
 
-                // Cocked Bat over shoulder (matching video `00:00` - `00:02`)
                 batMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.038, 0.021, 0.96, 14), batMat);
                 batMesh.position.set(-0.08, 0.45, 0.04);
                 batMesh.rotation.set(-0.28, 0, -0.38);
                 batMesh.castShadow = true;
                 rightHandPivot.add(batMesh);
             } else {
+                // Pitcher: Right-handed pitcher -> Glove on LEFT hand (+X when facing +Z), Ball in RIGHT hand (-X when facing +Z)
+                leftHandPivot.position.set(0.34, 0.58, 0.16);
+                rightHandPivot.position.set(-0.34, 0.58, 0.16);
+
                 const glove = new THREE.Mesh(new THREE.SphereGeometry(0.15, 16, 14), gloveMat);
                 glove.scale.set(1.05, 1.15, 0.65);
                 leftHandPivot.add(glove);
-                rightHandPivot.add(new THREE.Mesh(new THREE.SphereGeometry(0.095, 16, 14), skinMat));
+
+                const rHand = new THREE.Mesh(new THREE.SphereGeometry(0.095, 16, 14), skinMat);
+                rightHandPivot.add(rHand);
+
+                heldBall = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.06, 12, 12),
+                    new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 })
+                );
+                heldBall.position.set(0, 0.04, 0.07);
+                rightHandPivot.add(heldBall);
             }
             root.add(leftHandPivot, rightHandPivot);
 
@@ -1300,8 +1609,9 @@
                 leftFoot,
                 rightFoot,
                 batMesh,
+                heldBall,
                 updateAppearance(newHex, newEmblem, isWoodBat = false) {
-                    torsoMat.map = createPinstripeUniformTexture(newHex, numberStr, 'KOSHIEN', newEmblem);
+                    torsoMat.map = createPinstripeUniformTexture(newHex, numberStr, newEmblem, isPinstripe);
                     torsoMat.needsUpdate = true;
                     sleeveMat.color.set(newHex);
                     capGroup.children.forEach(c => {
@@ -1324,65 +1634,137 @@
             };
         }
 
-        function buildBatterAndFielders() {
-            // Batter stands on the LEFT side of the circular white platform (-0.62, 0.12, 0.08) facing RIGHT toward Toss Machine
+        function buildPitcherAndBatter() {
+            // 1. SD High-School Batter in Right-Handed Batter's Box (-0.78, 0.015, 0.08) facing the plate (+X)
             batter3D = createSDCharacter({
                 jerseyHex: state.teamColor,
                 role: 'batter',
                 numberStr: '4',
-                emblem: state.capEmblem
+                emblem: state.capEmblem,
+                isPinstripe: true
             });
-            batter3D.root.position.set(-0.62, 0.12, 0.08);
-            batter3D.root.rotation.y = Math.PI * 0.45;
+            batter3D.root.position.set(-0.78, 0.015, 0.08);
+            batter3D.root.rotation.y = Math.PI * 0.48;
             scene.add(batter3D.root);
 
-            // 8 Defense Fielders (shown when user toggles to '고시엔 수비연출' mode)
-            FIELDER_SPOTS.forEach(spot => {
-                const f = createSDCharacter({
-                    jerseyHex: '#dc2626',
-                    role: 'fielder',
-                    numberStr: spot.num,
-                    emblem: 'T'
-                });
-                f.root.position.copy(spot.vec);
-                f.root.lookAt(0, 0, 0);
-                f.root.visible = false;
-                scene.add(f.root);
-                fielders3D.push(f);
+            // 2. Opposing SD Pitcher on Mound (0, 0.26, -18.44) facing Home Plate (+Z)
+            pitcher3D = createSDCharacter({
+                jerseyHex: '#b91c1c',
+                role: 'pitcher',
+                numberStr: '1',
+                emblem: '龍',
+                isPinstripe: false
             });
+            pitcher3D.root.position.set(0, 0.26, -18.44);
+            pitcher3D.root.rotation.y = 0; // Facing +Z toward home plate
+            scene.add(pitcher3D.root);
         }
 
         /**
-         * Baseball, Ground Shadow, Golden Impact Burst & Tapered 3D Aerodynamic Ribbon Trail
+         * ============================================================================
+         * 6. STRIKE ZONE FRAME, SHRINKING TIMING RING, BALL & TAPERED RIBBON TRAIL
+         * ============================================================================
          */
-        function buildBallRibbonAndParticles() {
+        function buildStrikeZoneAndBallEffects() {
+            // 1. Translucent Strike Zone Frame over Home Plate (z = 0.0, y = 0.60 to 1.16)
+            strikeZoneGroup = new THREE.Group();
+            strikeZoneGroup.position.set(0, 0.88, 0.0);
+
+            const szW = 0.48;
+            const szH = 0.56;
+            const szFill = new THREE.Mesh(
+                new THREE.PlaneGeometry(szW, szH),
+                new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.08, side: THREE.DoubleSide, depthWrite: false })
+            );
+            strikeZoneGroup.add(szFill);
+
+            const borderPts = [
+                new THREE.Vector3(-szW / 2, -szH / 2, 0),
+                new THREE.Vector3(szW / 2, -szH / 2, 0),
+                new THREE.Vector3(szW / 2, szH / 2, 0),
+                new THREE.Vector3(-szW / 2, szH / 2, 0),
+                new THREE.Vector3(-szW / 2, -szH / 2, 0)
+            ];
+            const borderLine = new THREE.Line(
+                new THREE.BufferGeometry().setFromPoints(borderPts),
+                new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.45 })
+            );
+            strikeZoneGroup.add(borderLine);
+
+            // Inner 9-zone divider lines
+            [-szW / 6, szW / 6].forEach(gx => {
+                const gLine = new THREE.Line(
+                    new THREE.BufferGeometry().setFromPoints([
+                        new THREE.Vector3(gx, -szH / 2, 0),
+                        new THREE.Vector3(gx, szH / 2, 0)
+                    ]),
+                    new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.22 })
+                );
+                strikeZoneGroup.add(gLine);
+            });
+            [-szH / 6, szH / 6].forEach(gy => {
+                const gLine = new THREE.Line(
+                    new THREE.BufferGeometry().setFromPoints([
+                        new THREE.Vector3(-szW / 2, gy, 0),
+                        new THREE.Vector3(szW / 2, gy, 0)
+                    ]),
+                    new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.22 })
+                );
+                strikeZoneGroup.add(gLine);
+            });
+            scene.add(strikeZoneGroup);
+
+            // Target Arrival Ring & Shrinking Timing Indicator Ring in Strike Zone Plane (z = 0.0)
+            targetRingMesh = new THREE.Mesh(
+                new THREE.RingGeometry(0.055, 0.075, 32),
+                new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.85, side: THREE.DoubleSide, depthWrite: false })
+            );
+            targetRingMesh.visible = false;
+            scene.add(targetRingMesh);
+
+            shrinkingRingMesh = new THREE.Mesh(
+                new THREE.RingGeometry(0.88, 1.0, 40),
+                new THREE.MeshBasicMaterial({ color: 0xfacc15, transparent: true, opacity: 0.9, side: THREE.DoubleSide, depthWrite: false })
+            );
+            shrinkingRingMesh.visible = false;
+            scene.add(shrinkingRingMesh);
+
+            // 2. Baseball Mesh + Pitch Aura + Seam
             ballMesh = new THREE.Group();
             const sphere = new THREE.Mesh(
-                new THREE.SphereGeometry(0.065, 18, 18),
-                new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 })
+                new THREE.SphereGeometry(0.068, 18, 18),
+                new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.28 })
             );
             sphere.castShadow = true;
             ballMesh.add(sphere);
 
             const seam = new THREE.Mesh(
-                new THREE.TorusGeometry(0.064, 0.0055, 6, 20),
+                new THREE.TorusGeometry(0.067, 0.006, 6, 22),
                 new THREE.MeshBasicMaterial({ color: 0xdc2626 })
             );
             ballMesh.add(seam);
+
+            ballAuraMesh = new THREE.Mesh(
+                new THREE.SphereGeometry(0.095, 14, 14),
+                new THREE.MeshBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0.32, depthWrite: false })
+            );
+            ballMesh.add(ballAuraMesh);
+
             ballMesh.visible = false;
             scene.add(ballMesh);
 
+            // Ground Shadow
             ballShadowMesh = new THREE.Mesh(
                 new THREE.CircleGeometry(0.24, 16),
-                new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.36 })
+                new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.38 })
             );
             ballShadowMesh.rotation.x = -Math.PI / 2;
-            ballShadowMesh.position.y = 0.038;
+            ballShadowMesh.position.y = 0.03;
             ballShadowMesh.visible = false;
             scene.add(ballShadowMesh);
 
-            // Dynamic Tapered 3D Aerodynamic Ribbon Trail (matching `00:03` - `00:12` of reference video)
-            const maxTrailPts = 52;
+            // 3. Smooth Tapering White 3D Aerodynamic Ribbon Trail (from reference video)
+            const maxTrailPts = 54;
             const ribbonGeo = new THREE.BufferGeometry();
             const verts = new Float32Array(maxTrailPts * 2 * 3);
             const alphas = new Float32Array(maxTrailPts * 2);
@@ -1404,7 +1786,7 @@
                 fragmentShader: `
                     varying float vAlpha;
                     void main() {
-                        gl_FragColor = vec4(1.0, 1.0, 1.0, vAlpha * 0.88);
+                        gl_FragColor = vec4(1.0, 1.0, 1.0, vAlpha * 0.90);
                     }
                 `
             });
@@ -1413,25 +1795,25 @@
             ribbonMesh.visible = false;
             scene.add(ribbonMesh);
 
-            // Golden Bat Contact Shockwave Ring
+            // 4. Golden Bat Contact Shockwave Ring
             impactRingMesh = new THREE.Mesh(
                 new THREE.RingGeometry(0.08, 0.17, 28),
                 new THREE.MeshBasicMaterial({ color: 0xfef08a, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false })
             );
             scene.add(impactRingMesh);
 
-            // Toss Machine Launch Puff Particles
-            const pCount = 24;
-            const pGeo = new THREE.BufferGeometry();
-            pGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pCount * 3), 3));
-            tossPuffParticles = {
-                points: new THREE.Points(pGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.14, transparent: true, opacity: 0 })),
-                vels: Array.from({ length: pCount }, () => new THREE.Vector3()),
+            // 5. Mound Dirt Puff Particles
+            const mCount = 24;
+            const mGeo = new THREE.BufferGeometry();
+            mGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(mCount * 3), 3));
+            moundDustParticles = {
+                points: new THREE.Points(mGeo, new THREE.PointsMaterial({ color: 0x3b322d, size: 0.24, transparent: true, opacity: 0 })),
+                vels: Array.from({ length: mCount }, () => new THREE.Vector3()),
                 life: 0
             };
-            scene.add(tossPuffParticles.points);
+            scene.add(moundDustParticles.points);
 
-            // Turf / Dirt Landing Dust Particles
+            // 6. Turf / Dirt Landing Dust Particles
             const dCount = 36;
             const dGeo = new THREE.BufferGeometry();
             dGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(dCount * 3), 3));
@@ -1441,6 +1823,17 @@
                 life: 0
             };
             scene.add(turfDustParticles.points);
+
+            // 7. Bat Contact Sparks
+            const sCount = 28;
+            const sGeo = new THREE.BufferGeometry();
+            sGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(sCount * 3), 3));
+            sparkParticles = {
+                points: new THREE.Points(sGeo, new THREE.PointsMaterial({ color: 0xfef08a, size: 0.16, transparent: true, opacity: 0 })),
+                vels: Array.from({ length: sCount }, () => new THREE.Vector3()),
+                life: 0
+            };
+            scene.add(sparkParticles.points);
         }
 
         function updateRibbonGeometry() {
@@ -1452,7 +1845,7 @@
             ribbonMesh.visible = true;
             const posAttr = ribbonMesh.geometry.attributes.position;
             const alphaAttr = ribbonMesh.geometry.attributes.alpha;
-            const maxPts = 52;
+            const maxPts = 54;
 
             for (let i = 0; i < maxPts; i++) {
                 const idx = Math.min(i, pts.length - 1);
@@ -1461,7 +1854,6 @@
                 const halfWidth = (1 - t) * 0.14;
                 const alpha = Math.pow(1 - t, 1.35);
 
-                // Camera-facing perpendicular offset
                 const toCam = new THREE.Vector3().subVectors(camera.position, p).normalize();
                 const tangent = idx < pts.length - 1
                     ? new THREE.Vector3().subVectors(p, pts[idx + 1]).normalize()
@@ -1478,17 +1870,17 @@
             alphaAttr.needsUpdate = true;
         }
 
-        function spawnTossPuff(origin) {
-            if (!tossPuffParticles) return;
-            tossPuffParticles.life = 0.45;
-            tossPuffParticles.points.material.opacity = 0.85;
-            const attr = tossPuffParticles.points.geometry.attributes.position;
+        function spawnMoundDust(origin) {
+            if (!moundDustParticles) return;
+            moundDustParticles.life = 0.55;
+            moundDustParticles.points.material.opacity = 0.85;
+            const attr = moundDustParticles.points.geometry.attributes.position;
             for (let i = 0; i < attr.count; i++) {
-                attr.setXYZ(i, origin.x, origin.y, origin.z);
-                tossPuffParticles.vels[i].set(
-                    -0.9 + (Math.random() - 0.5) * 0.8,
-                    1.6 + Math.random() * 1.2,
-                    (Math.random() - 0.5) * 0.8
+                attr.setXYZ(i, origin.x + (Math.random() - 0.5) * 0.3, origin.y, origin.z + (Math.random() - 0.5) * 0.3);
+                moundDustParticles.vels[i].set(
+                    (Math.random() - 0.5) * 1.4,
+                    0.8 + Math.random() * 1.3,
+                    -0.6 + (Math.random() - 0.5) * 1.0
                 );
             }
             attr.needsUpdate = true;
@@ -1502,9 +1894,25 @@
             for (let i = 0; i < attr.count; i++) {
                 attr.setXYZ(i, origin.x, 0.12, origin.z);
                 turfDustParticles.vels[i].set(
-                    (Math.random() - 0.5) * 3.2,
+                    (Math.random() - 0.5) * 3.4,
                     1.2 + Math.random() * 2.2,
-                    (Math.random() - 0.5) * 3.2
+                    (Math.random() - 0.5) * 3.4
+                );
+            }
+            attr.needsUpdate = true;
+        }
+
+        function spawnContactSparks(origin) {
+            if (!sparkParticles) return;
+            sparkParticles.life = 0.38;
+            sparkParticles.points.material.opacity = 1.0;
+            const attr = sparkParticles.points.geometry.attributes.position;
+            for (let i = 0; i < attr.count; i++) {
+                attr.setXYZ(i, origin.x, origin.y, origin.z);
+                sparkParticles.vels[i].set(
+                    (Math.random() - 0.5) * 5.2,
+                    1.0 + Math.random() * 4.5,
+                    -1.0 - Math.random() * 4.5
                 );
             }
             attr.needsUpdate = true;
@@ -1513,11 +1921,11 @@
         function spawnHomeRunFireworks() {
             const colors = [0xfbbf24, 0xf43f5e, 0x38bdf8, 0x34d399, 0xa855f7];
             for (let b = 0; b < 5; b++) {
-                const count = 40;
+                const count = 42;
                 const geo = new THREE.BufferGeometry();
                 const pos = new Float32Array(count * 3);
                 const cx = -28 + b * 14;
-                const cy = 24 + (b % 2) * 5;
+                const cy = 26 + (b % 2) * 5;
                 const cz = -115;
                 const vels = [];
                 for (let i = 0; i < count; i++) {
@@ -1526,7 +1934,7 @@
                     pos[i * 3 + 2] = cz;
                     const theta = Math.random() * Math.PI * 2;
                     const phi = Math.random() * Math.PI;
-                    const spd = 4.5 + Math.random() * 7.5;
+                    const spd = 4.5 + Math.random() * 7.8;
                     vels.push(new THREE.Vector3(
                         Math.sin(phi) * Math.cos(theta) * spd,
                         Math.cos(phi) * spd,
@@ -1534,15 +1942,15 @@
                     ));
                 }
                 geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-                const pts = new THREE.Points(geo, new THREE.PointsMaterial({ color: colors[b % colors.length], size: 0.85, transparent: true, opacity: 1 }));
+                const pts = new THREE.Points(geo, new THREE.PointsMaterial({ color: colors[b % colors.length], size: 0.9, transparent: true, opacity: 1 }));
                 scene.add(pts);
-                fireworkParticles.push({ points: pts, vels, life: 1.6 });
+                fireworkParticles.push({ points: pts, vels, life: 1.65 });
             }
         }
 
         /**
          * ============================================================================
-         * 4. CORE GAMEPLAY FLOW: TOSS -> ONE-TAP SWING -> AERODYNAMICS -> CHASE CAM -> NEXT
+         * 7. LIVE PITCHING, 1-TAP SWING EVALUATION & AERODYNAMIC BALL FLIGHT
          * ============================================================================
          */
         function showJudgment(title, sub, colorClass = 'text-amber-300') {
@@ -1559,10 +1967,10 @@
             pop.classList.add('animate-judge');
 
             clearTimeout(pop._timer);
-            pop._timer = setTimeout(() => pop.classList.add('hidden'), 1150);
+            pop._timer = setTimeout(() => pop.classList.add('hidden'), 1180);
         }
 
-        function setPrompt(visible, mainText = 'Tap to Start!', subText = '화면 클릭 / 터치 / SPACE') {
+        function setPrompt(visible, mainText = 'Tap to Start!', subText = '화면 클릭 / 터치 / SPACEBAR') {
             const el = document.getElementById('center-prompt');
             if (!visible) {
                 el.classList.add('hidden');
@@ -1573,16 +1981,18 @@
             el.classList.remove('hidden');
         }
 
-        function resetToTossReady(autoLaunch = false) {
+        function resetToReadyState(autoWindup = false) {
             state.phase = 'ready_start';
             state.currentDistance = 0;
             document.getElementById('hud-live-distance').textContent = '0.00m';
-            document.getElementById('hud-telemetry-pill').classList.add('hidden');
             document.getElementById('next-btn').classList.add('hidden');
 
             ballMesh.visible = false;
             ballShadowMesh.visible = false;
             ribbonMesh.visible = false;
+            targetRingMesh.visible = false;
+            shrinkingRingMesh.visible = false;
+            strikeZoneGroup.visible = true;
             state.flight.trailPoints = [];
 
             // Reset Batter pose
@@ -1591,48 +2001,101 @@
             batter3D.leftHandPivot.rotation.y = 0;
             state.swing.active = false;
 
-            // Reset Fielders if in defense mode
-            FIELDER_SPOTS.forEach((spot, i) => {
-                if (fielders3D[i]) {
-                    fielders3D[i].root.visible = (state.gameMode === 'defense');
-                    fielders3D[i].root.position.copy(spot.vec);
-                    fielders3D[i].root.lookAt(0, 0, 0);
-                }
-            });
+            // Reset Pitcher pose on Mound
+            pitcher3D.root.position.set(0, 0.26, -18.44);
+            pitcher3D.torso.rotation.set(0, -Math.PI / 2, 0);
+            pitcher3D.leftFoot.position.set(-0.15, 0, 0);
+            pitcher3D.rightFoot.position.set(0.15, 0, 0);
+            pitcher3D.leftHandPivot.position.set(0.34, 0.58, 0.16);
+            pitcher3D.rightHandPivot.position.set(-0.34, 0.58, 0.16);
+            if (pitcher3D.heldBall) pitcher3D.heldBall.visible = true;
 
-            if (autoLaunch) {
-                launchTossBall();
+            if (autoWindup) {
+                startPitchWindup();
             } else {
-                setPrompt(true, 'Tap to Start!', '화면 클릭 / 터치 / SPACE');
+                document.getElementById('hud-callout-text').textContent = '투수 와인드업 대기 중';
+                setPrompt(true, 'Tap to Start!', '투구 시작 · 화면 클릭 / SPACE');
             }
         }
 
-        function launchTossBall() {
-            state.phase = 'toss_flight';
-            state.toss.timer = 0;
-            state.toss.duration = 0.86 + Math.random() * 0.08;
-            state.toss.machineRecoil = 1.0;
+        function startPitchWindup() {
+            state.phase = 'pitch_windup';
+            state.pitch.timer = 0;
+            state.pitch.windupDuration = 0.94;
+            state.pitch.passedPlate = false;
+            state.pitch.postPlateTimer = 0;
 
-            // Compute exact parabolic velocity from Toss Machine muzzle (0.62, 0.56, 0.02)
-            // so the ball peaks around y = 1.68m and passes right through the batter's sweet spot (-0.10, 1.05, -0.04) at t = 0.72 * duration!
-            const tSweet = state.toss.duration * 0.72;
-            const start = state.toss.startPos;
-            const target = new THREE.Vector3(-0.10, 1.05, -0.04);
+            // Choose Pitch Spec (Random realistic mix or user-selected pitch pill)
+            const chosenKey = state.selectedPitchFilter === 'random'
+                ? PITCH_KEYS[Math.floor(Math.random() * PITCH_KEYS.length)]
+                : state.selectedPitchFilter;
+            const spec = PITCH_TYPES[chosenKey] || PITCH_TYPES.four_seam;
+            state.pitch.spec = spec;
+            state.pitch.speedKmh = Math.round(spec.minKmh + Math.random() * (spec.maxKmh - spec.minKmh));
+
+            // Target plate crossing point inside or right on the edge of the strike zone
+            const targetX = (Math.random() - 0.5) * 0.34;
+            const targetY = 0.68 + Math.random() * 0.38;
+            state.pitch.targetPos.set(targetX, targetY, 0.0);
+
+            document.getElementById('hud-callout-text').textContent = `투수 와인드업... (${spec.name} 예고)`;
+            setPrompt(true, 'Tap to Swing!', '링이 줄어들 때 타이밍 스윙!');
+        }
+
+        function releasePitchFromMound() {
+            state.phase = 'pitch_flight';
+            state.pitch.flightTimer = 0;
+
+            const spec = state.pitch.spec;
+            const speedMs = state.pitch.speedKmh / 3.6;
+            const start = new THREE.Vector3(-0.22, 1.48, -17.05);
+            const target = state.pitch.targetPos;
+            const distZ = Math.abs(target.z - start.z); // 17.05m
+            const T = distZ / speedMs;
+
+            state.pitch.startPos.copy(start);
+            state.pitch.flightDuration = T;
+            state.pitch.prevPos.copy(start);
+
+            // Solve exact initial velocity v0 so P(T) = P0 + v0*T + 0.5*g*T^2 + breakVec = target
             const g = 9.81;
+            const vx = (target.x - start.x - spec.breakVec.x) / T;
+            const vy = (target.y - start.y + 0.5 * g * T * T - spec.breakVec.y) / T;
+            const vz = (target.z - start.z) / T;
+            state.pitch.vel0.set(vx, vy, vz);
 
-            const vx = (target.x - start.x) / tSweet;
-            const vz = (target.z - start.z) / tSweet;
-            const vy = (target.y - start.y + 0.5 * g * tSweet * tSweet) / tSweet;
-
-            state.toss.vel.set(vx, vy, vz);
+            // Hide ball in pitcher's hand, activate live 3D pitched ball + aura + target & shrinking rings
+            if (pitcher3D.heldBall) pitcher3D.heldBall.visible = false;
             ballMesh.position.copy(start);
             ballMesh.visible = true;
-            ballShadowMesh.position.set(start.x, 0.125, start.z);
+            ballAuraMesh.material.color.setHex(spec.auraColor);
+
+            ballShadowMesh.position.set(start.x, 0.03, start.z);
             ballShadowMesh.visible = true;
 
-            audio.playTossLaunch();
-            spawnTossPuff(start);
-            setPrompt(true, 'Tap to Swing!', '공이 가슴 높이로 내려올 때 스윙!');
+            targetRingMesh.position.set(target.x, target.y, 0.0);
+            targetRingMesh.material.color.setHex(spec.auraColor);
+            targetRingMesh.visible = true;
+
+            shrinkingRingMesh.position.set(target.x, target.y, 0.0);
+            shrinkingRingMesh.scale.setScalar(0.62);
+            shrinkingRingMesh.material.color.setHex(0xfacc15);
+            shrinkingRingMesh.visible = true;
+
+            document.getElementById('hud-callout-text').textContent = `${spec.name} · ${state.pitch.speedKmh} km/h`;
+            audio.playPitchRelease();
+            spawnMoundDust(new THREE.Vector3(0, 0.28, -17.6));
+        }
+
+        function evaluatePitchPositionAtTime(t) {
+            const p = state.pitch;
+            const u = Math.max(0, t / p.flightDuration);
+            const breakFactor = Math.pow(u, p.spec.breakPower);
+            return new THREE.Vector3(
+                p.startPos.x + p.vel0.x * t + p.spec.breakVec.x * breakFactor,
+                p.startPos.y + p.vel0.y * t - 0.5 * 9.81 * t * t + p.spec.breakVec.y * breakFactor,
+                p.startPos.z + p.vel0.z * t
+            );
         }
 
         function triggerOneTapSwing() {
@@ -1643,66 +2106,86 @@
             audio.playSwingWhoosh();
         }
 
-        function evaluateBatContact() {
-            const bPos = ballMesh.position;
-            // Hitting zone check: ball must have passed its upward toss arc (or be near peak) and sit within vertical hitting band [0.54m, 1.50m]
-            const heightDiff = bPos.y - 1.05; // 0 = dead-center sweet spot
-            const absH = Math.abs(heightDiff);
+        function evaluatePitchSwingContact() {
+            if (state.phase !== 'pitch_flight') return false;
 
-            // Too high (swung way too early while ball is still rising/above shoulders) or too low (already dropped near ankles)
-            if (state.toss.timer < state.toss.duration * 0.42 || absH > 0.48) {
-                const reason = state.toss.timer < state.toss.duration * 0.55 ? '너무 빨랐어요!' : '타이밍이 늦었어요!';
-                showJudgment('MISS!', reason, 'text-slate-200');
+            // Timing delta relative to exact plate crossing time `flightDuration`
+            // deltaT < 0 means EARLY swing (ball hasn't reached plate yet)
+            // deltaT > 0 means LATE swing (ball already passed plate)
+            const deltaT = state.pitch.flightTimer - state.pitch.flightDuration;
+            const absDelta = Math.abs(deltaT);
+
+            // Max contact window: [-0.145s, +0.135s]
+            if (deltaT < -0.145) {
+                showJudgment('SWING & MISS!', '너무 빠른 스윙이었습니다!', 'text-slate-200');
+                return false;
+            }
+            if (deltaT > 0.135) {
+                showJudgment('SWING & MISS!', '스윙 타이밍이 늦었습니다!', 'text-slate-200');
                 return false;
             }
 
-            // Valid Contact! Calculate sweetness (0.0 to 1.0)
-            const sweetness = Math.max(0, 1 - absH / 0.48);
-            const isPerfect = sweetness >= 0.80;
-            const isGreat = sweetness >= 0.52;
+            // Valid Bat-Ball Contact!
+            const sweetness = Math.max(0, 1 - absDelta / 0.14);
+            const isSweetSpot = absDelta <= 0.032;
+            const isGreat = absDelta <= 0.072;
 
-            // Wood bat rewards sweet spot even more, slightly narrower forgiveness
-            const batBonus = state.batType === 'wood' ? (isPerfect ? 1.05 : 0.96) : 1.0;
+            // Wood bat rewards sweet spot even more
+            const batBonus = state.batType === 'wood' ? (isSweetSpot ? 1.05 : 0.96) : 1.0;
 
-            // Exit velocity (112 km/h to 182 km/h)
-            const exitVelKmh = (114 + sweetness * 66) * batBonus;
+            // Exit velocity (118 km/h to 184 km/h)
+            const exitVelKmh = (120 + sweetness * 64) * batBonus;
             const exitSpeedMs = exitVelKmh / 3.6;
 
-            // Launch angle & Spray angle driven by contact height & timing!
-            // Early/High contact -> Pulled left (-spray) & higher arc
-            // Sweet-Spot contact -> Optimal 30-35 deg backspin drive straightaway
-            // Late/Low contact -> Pushed right (+spray) & lower line drive / grounder
             let launchAngleDeg;
             let sprayAngleDeg;
             let spinRate;
+            let isFoul = false;
 
-            if (isPerfect) {
-                launchAngleDeg = 30.5 + (Math.random() - 0.5) * 4.5;
-                sprayAngleDeg = (Math.random() - 0.5) * 10;
-                spinRate = 2450;
-                showJudgment('PERFECT!!', '완벽한 스윗스팟 홈런 타구!', 'text-amber-300');
-            } else if (heightDiff > 0) {
-                // High / Early -> Pulled left / high fly
-                const ratio = Math.min(1, heightDiff / 0.48);
-                launchAngleDeg = 34 + ratio * 22;
-                sprayAngleDeg = -8 - ratio * 26;
-                spinRate = 1900;
-                showJudgment(isGreat ? 'GREAT!' : 'HIGH FLY', isGreat ? '좌중간 큰 타구!' : '높게 뜬 플라이 타구', isGreat ? 'text-cyan-300' : 'text-sky-200');
+            if (isSweetSpot) {
+                // Dead-center / power-alley high backspin drive (115m - 165m+!)
+                launchAngleDeg = 29.5 + (Math.random() - 0.5) * 4.5;
+                sprayAngleDeg = (Math.random() - 0.5) * 14;
+                spinRate = 2500;
+                showJudgment('PERFECT!!', '완벽한 스윗스팟! 초대형 타구!', 'text-amber-300');
+            } else if (deltaT < 0) {
+                // EARLY SWING -> Pulled to Left Field (-sprayAngle)
+                const earlyRatio = Math.min(1, Math.abs(deltaT) / 0.145);
+                sprayAngleDeg = -12 - earlyRatio * 44; // up to -56 deg (foul past -45 deg)
+                launchAngleDeg = 24 + earlyRatio * 24;
+                spinRate = 2150;
+                isFoul = Math.abs(sprayAngleDeg) > 45.0;
+                if (isFoul) {
+                    showJudgment('FOUL BALL!', '좌측 파울 라인을 벗어났습니다', 'text-rose-300');
+                } else {
+                    showJudgment(isGreat ? 'GREAT PULL!' : 'PULL HIT', '좌중간으로 강하게 당겨친 타구!', isGreat ? 'text-cyan-300' : 'text-sky-200');
+                }
             } else {
-                // Low / Late -> Pushed right / line drive or grounder
-                const ratio = Math.min(1, Math.abs(heightDiff) / 0.48);
-                launchAngleDeg = 24 - ratio * 26; // down to -2 deg grounder
-                sprayAngleDeg = 8 + ratio * 26;
-                spinRate = 1650;
-                showJudgment(isGreat ? 'LINE DRIVE!' : 'GROUNDER', isGreat ? '우중간 날카로운 라인드라이브!' : '내야를 가르는 땅볼 타구', isGreat ? 'text-emerald-300' : 'text-amber-200');
+                // LATE SWING -> Pushed to Right Field (+sprayAngle)
+                const lateRatio = Math.min(1, deltaT / 0.135);
+                sprayAngleDeg = 12 + lateRatio * 44; // up to +56 deg (foul past +45 deg)
+                launchAngleDeg = 26 - lateRatio * 24;
+                spinRate = 1900;
+                isFoul = Math.abs(sprayAngleDeg) > 45.0;
+                if (isFoul) {
+                    showJudgment('FOUL BALL!', '우측 파울 라인을 벗어났습니다', 'text-rose-300');
+                } else {
+                    showJudgment(isGreat ? 'LINE DRIVE!' : 'OPPO HIT', '우중간으로 밀어친 날카로운 타구!', isGreat ? 'text-emerald-300' : 'text-amber-200');
+                }
             }
 
             const elevRad = THREE.MathUtils.degToRad(launchAngleDeg);
             const sprayRad = THREE.MathUtils.degToRad(sprayAngleDeg);
             const horizSpeed = exitSpeedMs * Math.cos(elevRad);
 
+            const contactPos = new THREE.Vector3(
+                THREE.MathUtils.clamp(ballMesh.position.x, -0.25, 0.25),
+                THREE.MathUtils.clamp(ballMesh.position.y, 0.62, 1.15),
+                0.0
+            );
+
             state.flight.timer = 0;
-            state.flight.pos.set(-0.08, bPos.y, -0.04);
+            state.flight.pos.copy(contactPos);
             state.flight.vel.set(
                 horizSpeed * Math.sin(sprayRad),
                 exitSpeedMs * Math.sin(elevRad),
@@ -1713,52 +2196,39 @@
             state.flight.landed = false;
             state.flight.isHomeRun = false;
             state.flight.hrCelebrated = false;
+            state.flight.isFoul = isFoul;
             state.flight.exitVelKmh = Math.round(exitVelKmh);
             state.flight.launchAngleDeg = Math.round(launchAngleDeg);
-            state.flight.trailPoints = [state.flight.pos.clone()];
+            state.flight.trailPoints = [contactPos.clone()];
 
-            // Setup Defense Fielder Pursuit if in 'defense' mode
-            setupDefenseRetriever();
+            if (!isFoul && exitVelKmh >= 134) {
+                state.hitCount++;
+                document.getElementById('hud-hit-count').textContent = state.hitCount;
+                update3DScoreboard();
+            }
 
-            // Hitstop & Impact Visuals
-            state.hitstopTimer = isPerfect ? 0.045 : 0.022;
-            impactRingMesh.position.copy(state.flight.pos);
+            // Hitstop micro-freeze + Impact Shockwave + Sparks + Metallic "KANG!"
+            state.hitstopTimer = isSweetSpot ? 0.045 : 0.022;
+            impactRingMesh.position.copy(contactPos);
             impactRingMesh.scale.setScalar(0.5);
             impactRingMesh.material.opacity = 0.95;
+            spawnContactSparks(contactPos);
 
             audio.playBatHit(sweetness, state.batType === 'wood');
-            if (launchAngleDeg > 18) audio.playSkyWind(1.2);
+            if (launchAngleDeg > 16) audio.playSkyWind(1.2);
 
+            // Hide strike zone indicators & prompt during ball flight
+            targetRingMesh.visible = false;
+            shrinkingRingMesh.visible = false;
+            strikeZoneGroup.visible = false;
+            ballAuraMesh.material.opacity = 0.0;
             setPrompt(false);
-            const pill = document.getElementById('hud-telemetry-pill');
-            document.getElementById('hud-telemetry-text').textContent = `타구속도 ${state.flight.exitVelKmh}km/h · 발사각 ${state.flight.launchAngleDeg}°`;
-            pill.classList.remove('hidden');
+
+            document.getElementById('hud-callout-text').textContent =
+                `타구속도 ${state.flight.exitVelKmh}km/h · 발사각 ${state.flight.launchAngleDeg}°`;
 
             state.phase = 'ball_flight';
             return true;
-        }
-
-        function setupDefenseRetriever() {
-            state.defense.ballFielded = false;
-            state.defense.relayInFlight = false;
-            state.defense.relayProgress = 0;
-
-            // Predict approximate landing zone to pick the nearest fielder
-            const estRange = Math.min(115, (state.flight.exitVelKmh / 3.6) * 1.9);
-            const dir = new THREE.Vector3(state.flight.vel.x, 0, state.flight.vel.z).normalize();
-            const estX = dir.x * estRange;
-            const estZ = dir.z * estRange;
-
-            let bestIdx = 6;
-            let bestD = Infinity;
-            FIELDER_SPOTS.forEach((spot, i) => {
-                const d = Math.hypot(estX - spot.vec.x, estZ - spot.vec.z);
-                if (d < bestD) {
-                    bestD = d;
-                    bestIdx = i;
-                }
-            });
-            state.defense.retrieverIdx = bestIdx;
         }
 
         function handlePrimaryAction() {
@@ -1766,71 +2236,128 @@
             if (!document.getElementById('customize-modal').classList.contains('hidden')) return;
 
             if (state.phase === 'ready_start') {
-                launchTossBall();
-            } else if (state.phase === 'toss_flight') {
+                startPitchWindup();
+            } else if (state.phase === 'pitch_windup' || state.phase === 'pitch_flight') {
                 triggerOneTapSwing();
             } else if (state.phase === 'result_ready') {
-                resetToTossReady(true);
+                resetToReadyState(true);
             }
         }
 
         /**
          * ============================================================================
-         * 5. AERODYNAMIC SIMULATION & BALL-CHASE CAMERA LOOP
+         * 8. MAIN SIMULATION STEP: PITCHER WINDUP, PITCH FLIGHT, AERODYNAMICS & BALL-CHASE CAM
          * ============================================================================
          */
         function stepSimulation(dt, elapsed) {
-            // 1. Toss Machine Recoil & Batter Swing Animation
-            if (tossMachine3D && state.toss.machineRecoil > 0) {
-                state.toss.machineRecoil = Math.max(0, state.toss.machineRecoil - dt * 5.0);
-                tossMachine3D.userData.bodyPivot.position.y = 0.24 - Math.sin(state.toss.machineRecoil * Math.PI) * 0.04;
-            }
-
+            // 1. Batter Swing Animation & Contact Evaluation
             if (state.swing.active) {
                 state.swing.timer += dt;
                 const p = Math.min(1, state.swing.timer / state.swing.duration);
-                // Fast forward snap + smooth follow-through
                 const swingCurve = p < 0.45 ? Math.sin((p / 0.45) * (Math.PI / 2)) : 1.0 - (p - 0.45) * 0.25;
-                batter3D.torso.rotation.y = -Math.PI / 2 + swingCurve * 1.45;
-                batter3D.rightHandPivot.rotation.y = swingCurve * 2.05;
-                batter3D.leftHandPivot.rotation.y = swingCurve * 1.75;
+                batter3D.torso.rotation.y = -Math.PI / 2 + swingCurve * 1.48;
+                batter3D.rightHandPivot.rotation.y = swingCurve * 2.08;
+                batter3D.leftHandPivot.rotation.y = swingCurve * 1.78;
 
-                // Evaluate bat-ball contact right as bat sweeps through the hitting plane
-                if (!state.swing.contactChecked && p >= 0.14 && p <= 0.42 && state.phase === 'toss_flight') {
+                // Check bat-ball contact as bat barrel crosses the plate
+                if (!state.swing.contactChecked && p >= 0.12 && p <= 0.42 && state.phase === 'pitch_flight') {
                     state.swing.contactChecked = true;
-                    evaluateBatContact();
+                    evaluatePitchSwingContact();
                 }
 
                 if (p >= 1.0) {
                     state.swing.active = false;
                 }
-            } else if (state.phase === 'ready_start' || state.phase === 'toss_flight') {
+            } else if (state.phase === 'ready_start' || state.phase === 'pitch_windup' || state.phase === 'pitch_flight') {
                 batter3D.torso.rotation.y = THREE.MathUtils.lerp(batter3D.torso.rotation.y, -Math.PI / 2, dt * 10);
                 batter3D.rightHandPivot.rotation.y = THREE.MathUtils.lerp(batter3D.rightHandPivot.rotation.y, 0, dt * 10);
                 batter3D.leftHandPivot.rotation.y = THREE.MathUtils.lerp(batter3D.leftHandPivot.rotation.y, 0, dt * 10);
             }
 
-            // 2. Toss Ball Parabolic Flight
-            if (state.phase === 'toss_flight') {
-                state.toss.timer += dt;
-                state.toss.vel.y -= 9.81 * dt;
-                ballMesh.position.addScaledVector(state.toss.vel, dt);
-                ballMesh.rotation.z += dt * 12;
-                ballShadowMesh.position.set(ballMesh.position.x, 0.125, ballMesh.position.z);
+            // 2. Opposing SD Pitcher Windup, Leg-Kick & Release Animation
+            if (state.phase === 'pitch_windup') {
+                state.pitch.timer += dt;
+                const u = Math.min(1, state.pitch.timer / state.pitch.windupDuration);
 
-                // If ball drops below the platform without being hit -> Miss / Reset for next toss
-                if (ballMesh.position.y <= 0.20 && state.toss.vel.y < 0) {
-                    if (!state.swing.contactChecked) {
-                        showJudgment('MISS!', '스윙하지 않았습니다', 'text-slate-300');
-                    }
-                    ballMesh.visible = false;
-                    ballShadowMesh.visible = false;
-                    state.phase = 'ready_start';
-                    setPrompt(true, 'Tap to Swing!', '다음 토스 준비 완료 · 클릭 / SPACE');
+                if (u < 0.45) {
+                    // Hands raise overhead
+                    const k = u / 0.45;
+                    pitcher3D.rightHandPivot.position.y = 0.58 + k * 0.65;
+                    pitcher3D.leftHandPivot.position.y = 0.58 + k * 0.65;
+                    pitcher3D.torso.rotation.y = -Math.PI / 2 - k * 0.45;
+                } else if (u < 0.80) {
+                    // High PowerPro Leg-Kick + Coiled Torso
+                    const k = (u - 0.45) / 0.35;
+                    const lift = Math.sin(k * Math.PI * 0.5);
+                    pitcher3D.rightFoot.position.set(0.18, lift * 0.46, -0.10);
+                    pitcher3D.torso.rotation.y = -Math.PI / 2 - 0.45 - lift * 0.35;
+                    pitcher3D.rightHandPivot.position.set(-0.42, 1.15 - lift * 0.25, -0.18);
+                } else {
+                    // Explosive Forward Stride & Whip Release
+                    const k = (u - 0.80) / 0.20;
+                    pitcher3D.root.position.z = -18.44 + k * 0.85;
+                    pitcher3D.rightFoot.position.set(0.16, (1 - k) * 0.46, k * 0.45);
+                    pitcher3D.leftFoot.position.set(-0.16, k * 0.28, -k * 0.35);
+                    pitcher3D.torso.rotation.y = -Math.PI / 2 - 0.80 + k * 1.45;
+                    pitcher3D.rightHandPivot.position.set(-0.22, 1.25 - k * 0.35, 0.35 + k * 0.35);
+                }
+
+                if (u >= 1.0) {
+                    releasePitchFromMound();
                 }
             }
 
-            // 3. Struck Ball Aerodynamic Flight (Drag + Backspin Magnus Lift + Turf Bounce/Roll)
+            // 3. Pitched Ball 3D Flight & Shrinking Timing Ring over Home Plate
+            if (state.phase === 'pitch_flight') {
+                state.pitch.flightTimer += dt;
+                const pos = evaluatePitchPositionAtTime(state.pitch.flightTimer);
+                ballMesh.position.copy(pos);
+
+                // Spin visualization according to pitch type
+                ballMesh.rotateOnAxis(state.pitch.spec.spinAxis, state.pitch.spec.spinRate * dt);
+                ballAuraMesh.material.opacity = 0.28 + Math.sin(elapsed * 24) * 0.08;
+                ballShadowMesh.position.set(pos.x, 0.03, pos.z);
+
+                // Update Shrinking Timing Ring around Target Ring in Strike Zone (`z = 0.0`)
+                const prog = state.pitch.flightTimer / state.pitch.flightDuration;
+                if (prog <= 1.15) {
+                    const ringScale = Math.max(0.06, (1.0 - prog) * 0.65 + 0.075);
+                    shrinkingRingMesh.scale.setScalar(ringScale);
+                    // Turns bright emerald/gold inside the sweet spot window (`prog` in [0.92, 1.07])
+                    if (prog >= 0.91 && prog <= 1.08) {
+                        shrinkingRingMesh.material.color.setHex(0x34d399);
+                    } else {
+                        shrinkingRingMesh.material.color.setHex(0xfacc15);
+                    }
+                }
+
+                // Pitcher follow-through settle
+                pitcher3D.torso.rotation.y = THREE.MathUtils.lerp(pitcher3D.torso.rotation.y, -Math.PI / 2 + 0.45, dt * 8);
+
+                // Check if ball passed home plate without being hit
+                if (!state.pitch.passedPlate && pos.z >= 0.15) {
+                    state.pitch.passedPlate = true;
+                    targetRingMesh.visible = false;
+                    shrinkingRingMesh.visible = false;
+                    audio.playCatcherMittPop();
+
+                    if (!state.swing.contactChecked) {
+                        showJudgment('STRIKE! (지나감)', `${state.pitch.spec.name} ${state.pitch.speedKmh}km/h`, 'text-sky-300');
+                    }
+                }
+
+                if (state.pitch.passedPlate) {
+                    state.pitch.postPlateTimer += dt;
+                    if (state.pitch.postPlateTimer >= 0.36) {
+                        ballMesh.visible = false;
+                        ballShadowMesh.visible = false;
+                        state.phase = 'ready_start';
+                        setPrompt(true, 'Tap to Swing!', '다음 투구 준비 완료 · 클릭 / SPACE');
+                    }
+                }
+            }
+
+            // 4. Struck Ball Aerodynamic Flight (Quadratic Drag + Backspin Magnus Lift + Turf Bounce/Roll)
             if (state.phase === 'ball_flight') {
                 const fl = state.flight;
                 fl.timer += dt;
@@ -1838,40 +2365,38 @@
                 if (!fl.landed) {
                     const subSteps = 4;
                     const subDt = dt / subSteps;
-                    const dragCoeff = 0.0054;
-                    const magnusCoeff = 0.000018;
+                    const dragCoeff = 0.0052;
+                    const magnusCoeff = 0.0000185;
 
                     for (let s = 0; s < subSteps; s++) {
                         const speed = fl.vel.length();
                         if (speed > 0.01) {
-                            // Quadratic aerodynamic drag
                             const dragMag = dragCoeff * speed * speed;
                             const axDrag = -(fl.vel.x / speed) * dragMag;
                             const ayDrag = -(fl.vel.y / speed) * dragMag;
                             const azDrag = -(fl.vel.z / speed) * dragMag;
 
-                            // Backspin Magnus lift perpendicular to velocity
+                            // Backspin Magnus lift
                             const horizSpd = Math.hypot(fl.vel.x, fl.vel.z);
                             const liftMag = magnusCoeff * fl.spinRate * horizSpd;
-                            const ayMagnus = liftMag;
 
                             fl.vel.x += axDrag * subDt;
-                            fl.vel.y += (ayDrag + ayMagnus - 9.81) * subDt;
+                            fl.vel.y += (ayDrag + liftMag - 9.81) * subDt;
                             fl.vel.z += azDrag * subDt;
                         }
 
                         fl.pos.addScaledVector(fl.vel, subDt);
 
-                        // Ground Collision & Turf Rolling Physics
+                        // Ground Collision & Koshien Kurotsuchi Dirt / Outfield Grass Bounce & Roll
                         if (fl.pos.y <= 0.07 && fl.vel.y < 0) {
                             fl.pos.y = 0.07;
                             if (fl.bounces === 0 && !fl.isHomeRun) {
                                 spawnTurfDust(fl.pos);
                             }
                             fl.bounces++;
-                            const isInDirt = Math.hypot(fl.pos.x, fl.pos.z + 20.5) < 34.5;
-                            const restitution = isInDirt ? 0.44 : 0.36;
-                            const bounceDrag = isInDirt ? 0.80 : 0.72;
+                            const isInDirt = Math.hypot(fl.pos.x, fl.pos.z + 19.2) < 35.5;
+                            const restitution = isInDirt ? 0.45 : 0.36;
+                            const bounceDrag = isInDirt ? 0.81 : 0.72;
 
                             if (Math.abs(fl.vel.y) > 1.1) {
                                 fl.vel.y = -fl.vel.y * restitution;
@@ -1882,7 +2407,7 @@
                             fl.vel.z *= bounceDrag;
                         }
 
-                        // Rolling friction when skimming the grass/dirt
+                        // Rolling deceleration
                         if (fl.pos.y <= 0.08 && Math.abs(fl.vel.y) < 0.2) {
                             const rollDecel = 5.2 * subDt;
                             const hSpd = Math.hypot(fl.vel.x, fl.vel.z);
@@ -1897,64 +2422,37 @@
                         }
                     }
 
-                    // Update Ball Mesh, Shadow & Aerodynamic Ribbon Trail
                     ballMesh.position.copy(fl.pos);
                     ballMesh.rotation.x -= dt * 36;
-                    ballShadowMesh.position.set(fl.pos.x, 0.04, fl.pos.z);
+                    ballShadowMesh.position.set(fl.pos.x, 0.032, fl.pos.z);
 
                     fl.trailPoints.unshift(fl.pos.clone());
-                    if (fl.trailPoints.length > 52) fl.trailPoints.pop();
+                    if (fl.trailPoints.length > 54) fl.trailPoints.pop();
                     updateRibbonGeometry();
 
-                    // Live Distance Counter Update (`0.00m` -> `162.87m`)
+                    // Live Distance Counter Update (`0.00m` -> `158.42m`)
                     const distM = Math.hypot(fl.pos.x, fl.pos.z);
                     state.currentDistance = distM;
                     document.getElementById('hud-live-distance').textContent = `${distM.toFixed(2)}m`;
-                    if (distM > state.bestDistance) {
+                    if (!fl.isFoul && distM > state.bestDistance) {
                         saveBestDistance(distM);
                     }
 
-                    // Check Koshien Home Run Fence Clearance (95m corners -> 118m center)
+                    // Check Koshien Ivy Fence Home Run Clearance (95m corners -> 118m center)
                     const sprayTheta = Math.atan2(fl.pos.x, -fl.pos.z);
-                    const isFairAngle = Math.abs(sprayTheta) <= Math.PI * 0.255;
+                    const isFairAngle = Math.abs(sprayTheta) <= Math.PI * 0.252;
                     const fenceDist = getWallRadiusAtAngle(THREE.MathUtils.clamp(sprayTheta, -Math.PI * 0.25, Math.PI * 0.25));
 
-                    if (!fl.hrCelebrated && isFairAngle && distM >= fenceDist && fl.pos.y >= 3.2) {
+                    if (!fl.isFoul && !fl.hrCelebrated && isFairAngle && distM >= fenceDist && fl.pos.y >= 3.2) {
                         fl.isHomeRun = true;
                         fl.hrCelebrated = true;
                         state.homeRunCount++;
-                        document.getElementById('badge-hit-count').textContent = `홈런 ${state.homeRunCount}개`;
-                        state.crowdWaveTimer = 2.4;
+                        document.getElementById('hud-hr-count').textContent = state.homeRunCount;
+                        state.crowdWaveTimer = 2.5;
                         audio.playHomeRunCelebration();
                         spawnHomeRunFireworks();
                         update3DScoreboard();
-                        showJudgment('HOME RUN!!', '고시엔 담장을 넘어가는 초대형 홈런!', 'text-amber-300');
-                    }
-
-                    // Optional Koshien Defense Mode: Nearest Fielder Sprints to Ball
-                    if (state.gameMode === 'defense' && !fl.isHomeRun) {
-                        const f = fielders3D[state.defense.retrieverIdx];
-                        if (f) {
-                            const dx = fl.pos.x - f.root.position.x;
-                            const dz = fl.pos.z - f.root.position.z;
-                            const d = Math.hypot(dx, dz);
-                            if (d > 0.4) {
-                                const step = Math.min(d, 8.6 * dt);
-                                f.root.position.x += (dx / d) * step;
-                                f.root.position.z += (dz / d) * step;
-                                f.root.lookAt(fl.pos.x, 0, fl.pos.z);
-                                const stride = Math.sin(fl.timer * 24) * 0.18;
-                                f.leftFoot.position.z = stride;
-                                f.rightFoot.position.z = -stride;
-                            } else if (fl.bounces >= 1 && !state.defense.ballFielded) {
-                                // Fielder scoops ball & stops it cleanly
-                                state.defense.ballFielded = true;
-                                fl.vel.set(0, 0, 0);
-                                audio.playFielderGlovePop();
-                                const spot = FIELDER_SPOTS[state.defense.retrieverIdx];
-                                showJudgment(`${spot.pos} 포구!`, `${spot.name} 야수가 타구를 처리했습니다`, 'text-sky-300');
-                            }
-                        }
+                        showJudgment('HOME RUN!!', '고시엔 담장을 넘어가는 초대형 아치!', 'text-amber-300');
                     }
 
                     // Check if ball has come to rest
@@ -1962,13 +2460,14 @@
                         fl.landed = true;
                         update3DScoreboard();
                         state.phase = 'result_ready';
-                        document.getElementById('next-btn').classList.remove('hidden');
-                        document.getElementById('next-btn').classList.add('animate-next-btn');
+                        const nextBtn = document.getElementById('next-btn');
+                        nextBtn.classList.remove('hidden');
+                        nextBtn.classList.add('animate-next-btn');
                     }
                 }
             }
 
-            // 4. Camera Controller: Holds on Batter for 0.25s post-hit, then Smoothly Tracks Behind Ball!
+            // 5. Camera Controller: Holds 0.25s on Batter Follow-Through, then Smoothly Tracks Behind Ball!
             let desiredPos = HOME_CAM_POS;
             let desiredLook = HOME_CAM_LOOK;
 
@@ -1981,45 +2480,45 @@
                         : new THREE.Vector3(bPos.x, 0, bPos.z).normalize();
                     if (flightDir.lengthSq() < 0.01) flightDir.set(0, 0, -1);
 
-                    // Chase Camera positioned behind and slightly above the ball, tilting down to frame the ball + white trail + concentric distance rings
+                    // High Behind-the-Ball Chase Camera looking down over the field & distance arcs
                     desiredPos = new THREE.Vector3(
-                        bPos.x - flightDir.x * 5.6,
-                        Math.max(2.1, bPos.y + 2.7),
-                        bPos.z - flightDir.z * 5.6
+                        bPos.x - flightDir.x * 5.8,
+                        Math.max(2.2, bPos.y + 2.8),
+                        bPos.z - flightDir.z * 5.8
                     );
                     desiredLook = new THREE.Vector3(
-                        bPos.x + flightDir.x * 13.5,
-                        Math.max(0.2, bPos.y - 3.4),
-                        bPos.z + flightDir.z * 13.5
+                        bPos.x + flightDir.x * 14.0,
+                        Math.max(0.2, bPos.y - 3.5),
+                        bPos.z + flightDir.z * 14.0
                     );
                 }
             }
 
-            const lerpFactor = (state.phase === 'ready_start' || state.phase === 'toss_flight')
+            const lerpFactor = (state.phase === 'ready_start' || state.phase === 'pitch_windup' || state.phase === 'pitch_flight')
                 ? Math.min(1, dt * 9.0)
-                : Math.min(1, dt * 6.2);
+                : Math.min(1, dt * 6.0);
             camCurrentPos.lerp(desiredPos, lerpFactor);
             camCurrentLook.lerp(desiredLook, lerpFactor);
             camera.position.copy(camCurrentPos);
             camera.lookAt(camCurrentLook);
 
-            // 5. Impact Ring, Particles, Clouds & Animated Koshien Alps Spectators
+            // 6. Impact Ring, Particles, Clouds & Cheering Grandstand Spectators
             if (impactRingMesh && impactRingMesh.material.opacity > 0) {
-                impactRingMesh.scale.addScalar(dt * 14);
+                impactRingMesh.scale.addScalar(dt * 15);
                 impactRingMesh.material.opacity = Math.max(0, impactRingMesh.material.opacity - dt * 2.8);
             }
 
-            [tossPuffParticles, turfDustParticles].forEach(sys => {
+            [moundDustParticles, turfDustParticles, sparkParticles].forEach(sys => {
                 if (sys && sys.life > 0) {
                     sys.life -= dt;
-                    sys.points.material.opacity = Math.max(0, sys.life * 1.1);
+                    sys.points.material.opacity = Math.max(0, sys.life * 1.4);
                     const attr = sys.points.geometry.attributes.position;
                     for (let i = 0; i < attr.count; i++) {
-                        sys.vels[i].y -= 6.0 * dt;
+                        sys.vels[i].y -= 6.5 * dt;
                         attr.setXYZ(
                             i,
                             attr.getX(i) + sys.vels[i].x * dt,
-                            Math.max(0.05, attr.getY(i) + sys.vels[i].y * dt),
+                            Math.max(0.03, attr.getY(i) + sys.vels[i].y * dt),
                             attr.getZ(i) + sys.vels[i].z * dt
                         );
                     }
@@ -2030,7 +2529,7 @@
             for (let i = fireworkParticles.length - 1; i >= 0; i--) {
                 const fw = fireworkParticles[i];
                 fw.life -= dt;
-                fw.points.material.opacity = Math.max(0, fw.life / 1.6);
+                fw.points.material.opacity = Math.max(0, fw.life / 1.65);
                 const attr = fw.points.geometry.attributes.position;
                 for (let j = 0; j < attr.count; j++) {
                     fw.vels[j].y -= 4.2 * dt;
@@ -2050,8 +2549,8 @@
 
             if (cloudsGroup) {
                 cloudsGroup.children.forEach((c, idx) => {
-                    c.position.x += dt * (0.65 + (idx % 3) * 0.2);
-                    if (c.position.x > 165) c.position.x = -165;
+                    c.position.x += dt * (0.55 + (idx % 3) * 0.2);
+                    if (c.position.x > 175) c.position.x = -175;
                 });
             }
 
@@ -2062,21 +2561,21 @@
                 for (let i = 0; i < crowdData.length; i++) {
                     const s = crowdData[i];
                     const bounce = isWave
-                        ? Math.max(0, Math.sin(s.x * 0.25 - elapsed * 9.5)) * 0.45
-                        : Math.abs(Math.sin(elapsed * 4.8 + s.phase)) * 0.14;
+                        ? Math.max(0, Math.sin(s.x * 0.22 - elapsed * 9.5)) * 0.5
+                        : Math.abs(Math.sin(elapsed * 4.6 + s.phase)) * 0.14;
 
                     dummy.position.set(s.x, s.y + bounce, s.z);
-                    dummy.rotation.set(0, -s.angle, 0);
+                    dummy.rotation.set(0, s.angle, 0);
                     dummy.updateMatrix();
                     crowdBodyInstanced.setMatrixAt(i, dummy.matrix);
 
-                    dummy.position.set(s.x, s.y + 0.44 + bounce, s.z);
+                    dummy.position.set(s.x, s.y + 0.50 + bounce, s.z);
                     dummy.updateMatrix();
                     crowdHeadInstanced.setMatrixAt(i, dummy.matrix);
 
-                    const pump = Math.sin(elapsed * 8.0 + s.phase) * 0.14;
-                    dummy.position.set(s.x + 0.16, s.y + 0.48 + bounce + pump, s.z);
-                    dummy.rotation.set(0, -s.angle, pump * 2.0);
+                    const pump = Math.sin(elapsed * 7.8 + s.phase) * 0.15;
+                    dummy.position.set(s.x + 0.18, s.y + 0.54 + bounce + pump, s.z);
+                    dummy.rotation.set(0, s.angle, pump * 2.0);
                     dummy.updateMatrix();
                     crowdPropInstanced.setMatrixAt(i, dummy.matrix);
                 }
@@ -2088,7 +2587,7 @@
 
         /**
          * ============================================================================
-         * 6. INPUT LISTENERS, RESIZE & MAIN RENDER LOOP
+         * 9. INPUT LISTENERS, PITCH SELECTOR PILLS, RESIZE & MAIN LOOP
          * ============================================================================
          */
         function bindEvents() {
@@ -2102,16 +2601,28 @@
             document.getElementById('next-btn').addEventListener('click', (e) => {
                 e.stopPropagation();
                 audio.ensureCtx();
-                resetToTossReady(true);
+                resetToReadyState(true);
             });
 
-            document.getElementById('mode-toggle-btn').addEventListener('click', (e) => {
-                e.stopPropagation();
-                state.gameMode = state.gameMode === 'toss' ? 'defense' : 'toss';
-                document.getElementById('mode-label').textContent = state.gameMode === 'toss' ? '토스 배팅' : '고시엔 수비연출';
-                fielders3D.forEach((f, idx) => {
-                    f.root.visible = (state.gameMode === 'defense');
-                    f.root.position.copy(FIELDER_SPOTS[idx].vec);
+            // Top-Right Pitch Selector Pills
+            document.querySelectorAll('.pitch-pill').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    audio.ensureCtx();
+                    const pitchId = btn.dataset.pitch;
+                    state.selectedPitchFilter = pitchId;
+
+                    document.querySelectorAll('.pitch-pill').forEach(p => {
+                        p.className = 'pitch-pill px-2.5 py-1 rounded-full bg-slate-950/80 hover:bg-slate-800 text-white font-bold text-[11px] sm:text-xs shadow-md border border-white/25 transition cursor-pointer';
+                    });
+                    btn.className = 'pitch-pill px-2.5 py-1 rounded-full bg-amber-400 text-slate-950 font-black text-[11px] sm:text-xs shadow-md border border-white/70 transition cursor-pointer';
+
+                    const label = pitchId === 'random' ? '랜덤 실전 배합' : PITCH_TYPES[pitchId].name;
+                    document.getElementById('hud-callout-text').textContent = `다음 구종 설정: ${label}`;
+
+                    if (state.phase === 'ready_start' || state.phase === 'result_ready') {
+                        resetToReadyState(true);
+                    }
                 });
             });
 
@@ -2160,8 +2671,10 @@
             document.getElementById('reset-best-btn').addEventListener('click', () => {
                 state.bestDistance = 0;
                 state.homeRunCount = 0;
+                state.hitCount = 0;
                 document.getElementById('hud-best-distance').textContent = '0.00m';
-                document.getElementById('badge-hit-count').textContent = '홈런 0개';
+                document.getElementById('hud-hr-count').textContent = '0';
+                document.getElementById('hud-hit-count').textContent = '0';
                 try { localStorage.removeItem(STORAGE_KEY_BEST); } catch (e) {}
                 update3DScoreboard();
             });
@@ -2169,15 +2682,14 @@
             document.getElementById('apply-modal-btn').addEventListener('click', () => {
                 const name = document.getElementById('school-name-input').value.trim();
                 state.schoolName = name || '세이도 고교';
-                document.getElementById('badge-school-name').textContent = state.schoolName;
-                document.getElementById('badge-school-color').style.backgroundColor = state.teamColor;
+                document.getElementById('hud-school-name').textContent = state.schoolName;
+                document.getElementById('hud-school-dot').style.backgroundColor = state.teamColor;
                 if (batter3D) batter3D.updateAppearance(state.teamColor, state.capEmblem, state.batType === 'wood');
                 updateSpectatorColors();
                 update3DScoreboard();
                 modal.classList.add('hidden');
             });
 
-            // Keyboard Space / Enter
             window.addEventListener('keydown', (e) => {
                 if (!modal.classList.contains('hidden')) return;
                 if (e.code === 'Space' || e.code === 'Enter') {
@@ -2216,7 +2728,7 @@
             document.getElementById('hud-best-distance').textContent = `${state.bestDistance.toFixed(2)}m`;
             initThreeScene();
             bindEvents();
-            resetToTossReady(false);
+            resetToReadyState(false);
             requestAnimationFrame(animate);
         };
     </script>
